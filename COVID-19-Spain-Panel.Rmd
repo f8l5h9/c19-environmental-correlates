@@ -1,0 +1,433 @@
+---
+title: "COVID-19-Panel-Spain"
+author: "TURURU"
+date: "4/11/2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r library, collapse=TRUE, message=FALSE}
+library(meteoland)
+library(geosphere)
+library(sf)
+library(aemet)
+library(spdep)
+library(spsur)
+library(spatialreg)
+library(systemfit)
+library(plm)
+library(splm)
+```
+
+
+# Los datos Spain
+
+Algunas notas sobre los datos:
+
+* **Los datos son provisionales**
+
+* Las cifras oficiales de Diagnosticados/Muertes estan disponibles a nivel de Comunidad Autónoma (CCAA). 
+Aunque sean oficiales hay dudas sobre ellas.
+Los informes están disponibles aquí: 
+https://www.mscbs.gob.es/en/profesionales/saludPublica/ccayes/alertasActual/nCov-China/situacionActual.htm
+
+* Algunas regiones (CCAA) ofrencen datos a nivel de provincia, otras no.
+
+* Los datos a nivel provincial, principalmente por el esfuerzo de la televisón española (RTVE).
+https://www.rtve.es/noticias/20200407/mapa-del-coronavirus-espana/2004681.shtml
+
+* Estos datos junto con otros recogidos de diversas fuentes están recogidos en GitHub en la web de datalista: https://github.com/datadista/datasets/tree/master/COVID%2019
+ 
+* Los datos climatológicos (temperaturas, etc) son oficiales 
+http://www.aemet.es/
+
+* Los datos de poblacion tb son oficiales del Instituto Nacional de Estadística
+http://www.ine.es/
+
+## Lectura datos COVID-19 Spain
+
+Principales características:
+
+* **N=50 provincias**
+* **T=22 días, desde el 14 de marzo hasta el 4 de abril**
+* **Desde el día 14 Marzo hasta el 4 de Abril** EL CONFINAMIENTO SE INICIÓ EL 16 DE MARZO
+* **Empezamos el 14 de Marzo porque es el primer dia con al menos 1 caso en todas las provincias**
+
+```{r}
+## Lectura de Datos COVID-19
+BD <- read.table(file="COVID-19-Diagnosticados.csv",sep = ";",header = TRUE)
+BD$X <- NULL
+BD$X.1 <- NULL
+```
+
+## Lectura de geometría sf
+
+```{r}
+provincias.sf <- sf::st_read("Shp/Provincias.shp") #
+
+provincias.sf$dens <- provincias.sf$POPULATION/as.numeric(sf::st_area(provincias.sf)/10^6)
+co <- sf::st_coordinates(sf::st_centroid(provincias.sf))
+provincias.sf$Lon <- co[,1]/1000000
+provincias.sf$Lat <- co[,2]/1000000 
+```
+
+## Calculo de incidencia (casos 100000 hab) y join con sf
+
+```{r}
+## Join with sf
+provincias.sf <- merge(provincias.sf,BD,id.x="ID_INE",id.y="ID_INE",id.all=TRUE)
+
+Inc <- sf::st_drop_geometry(provincias.sf[,20:42])*100000/provincias.sf$POPULATION
+names(Inc) <- gsub("D","I",names(Inc))
+Inc$ID_INE <- provincias.sf$ID_INE
+
+provincias.sf <- merge(provincias.sf,Inc,id.x="ID_INE",id.y="ID_INE",id.all=TRUE)
+```
+### Dos varaibles de control: Ratio H/M ; Edad_Media
+Un plot
+
+```{r}
+plot(provincias.sf["EDAD_MED"])
+plot(provincias.sf["HOM_MUJ"])
+
+```
+### Evolucion de la Incidencia
+```{r}
+plot(provincias.sf["I19Mar"])
+plot(provincias.sf["I28Mar"])
+plot(provincias.sf["I03Abr"])
+
+```
+
+
+## Lectura datos climáticos
+
+* Se ha usado el paquete **meteoland** para obtener las temperaturas de distintas estaciones meteorológicas (el data frame stations lista las estaciones). Para cada provincia de ha elegido una estación meteorológica que fuera representativa y que contuviera datos de temperaturas (Max/Min/Media), Pluviosidad, y horas de sol. 
+
+En general estas estaciones no recogen información sobre la humedad relativa (HR). Para poder incluir en el modelo la HR se han considerado dos opciones. La primera alternativa es la estimación en base a las temperaturas máximas y mínimas (ver nota en 'COVID-19-Datos-Climáticos-Spain.R'). la segunda alternativa es recoger datos sobre la altitud de cada provincia (datos de la capital de provincia en wikipedia). La altitud es una proxy de la humedad ya que a mayor altitud el clima es más seco y el grado de humedad menor.
+
+**ES IMPORTANTE NOTAR LO SIGUIENTE RESPECTO A LA TEMPERATURA/HORAS DE SOL/..**
+
+Un individuo que es diagnosticado el dia 'X' probablemente se infectó 7-14 días antes ya que los síntomas tardan en manifestarse unos días. Por tanto la temperatura que debe ser relevante para explicar los casos diagnosticados el día 'X' deben ser las temperaturas en días anteriores. Hemos considerado las temperaturas que se obtienen en promediar la temperatura media (TMed) de los días "X-5' hasta "X-12'. Esta variable de temperatura retardada la nombramos **TMedmm**.
+
+Lo mismo para horas de Sol
+
+Detalles de la construccion de las variable etc están en el códico 'COVID-19-Datos-Climáticos-Spain.R'
+
+```{r}
+load("~/Dropbox/COVID-19/COVID-19-Datos_Climaticos_Spain.RData")
+```
+
+## Join temperatures to shp
+
+```{r}
+provincias.sf <- merge(provincias.sf,TMed,id.x="ID_INE",id.y="ID_INE",id.all=TRUE)
+provincias.sf <- merge(provincias.sf,TMax,id.x="ID_INE",id.y="ID_INE",id.all=TRUE)
+provincias.sf <- merge(provincias.sf,Plu,id.x="ID_INE",id.y="ID_INE",id.all=TRUE)
+provincias.sf <- merge(provincias.sf,Sun,id.x="ID_INE",id.y="ID_INE",id.all=TRUE)
+provincias.sf <- merge(provincias.sf,Hum,id.x="ID_INE",id.y="ID_INE",id.all=TRUE)
+provincias.sf <- merge(provincias.sf,TMedmm,id.x="ID_INE",id.y="ID_INE",id.all=TRUE)
+provincias.sf <- merge(provincias.sf,Sunmm,id.x="ID_INE",id.y="ID_INE",id.all=TRUE)
+provincias.sf <- merge(provincias.sf,Hummm,id.x="ID_INE",id.y="ID_INE",id.all=TRUE)
+provincias.sf <- merge(provincias.sf,Plumm,id.x="ID_INE",id.y="ID_INE",id.all=TRUE)
+```
+
+# Metodología
+
+Dos alternativas en entorno panel
+
+1) Panel clásico
+2) SUR espacial
+
+Ventajas en inconvenientes:
+
+1) Panel Clásico o Dinámico
+
+* Debe ser un modelo de efectos fijos para recoger la hetereogeneidad entre las distintas provincias (efectos)
+* Debería incluir estructura dinámica ya que la serie tiene una fuerte estrutura temporal
+* INCONVENIENTE: considera que la incluencia del dato del día anterior es constante (se estima un coeficiente constante)
+* INCONVENIENTE: No se pueden incluir varaibles constantes en T. La hetereogeneidad entre provincias queda en el efecto fijo. No podemos por tanto incluir datos sobre estructura de la poblacion.
+* INCONVENIENTE: No podemos incorporar efectos espaciales. El paquete **splm** no incluye estimación de paneles dinámicos con efectos espaciales. Tendriamos que hacerlo en matlab con los códigos de P.Elhorst.
+
+2) Estiamción SUR espacial
+
+* Hay un coeficente para cada variable y cada instante de tiempo. Aunque es posible considerar coeficientes constantes para los periodos temporales que consideremos.
+* La hetereoeneidad espacial debemos incorporarla mediante variables explicativas. --> Estructura de la población relacionada con COVID-19.
+* Permite incluir varaibles constantes en T.
+* la dinámica temporar quedará recogida mediante el término independiente y la estructura de correlaciones en los residuos. EN TODO CASO, ENTIENDO QUE NUESTRO OBJETIVO NO ES EXPLICAR ESA TENEDENCIA TEMPORAL (solo modelizarla para no incurrir en errores)
+
+## Construcción del panel
+Reordenar los datos y meterlos en estructura panel
+```{r}
+######################################
+# Panel clásico
+######################################
+# Construccion del Panel
+Panel <- as.factor(rep(provincias.sf$PROVINCIA,22))
+Panel <- as.data.frame(Panel)
+names(Panel) <- c("index")
+Panel$time <- as.integer(Matrix::kronecker(1:22,rep(1,50)))
+Panel$PROV <- as.factor(rep(provincias.sf$ID_INE,22))
+Panel$Inc <- matrix(as.matrix(Inc[,1:22]),ncol=1) 
+Panel$HM <- rep(provincias.sf$HOM_MUJ,22)
+Panel$EM <- rep(provincias.sf$EDAD_MED,22)
+Panel$COSTA <- rep(provincias.sf$COSTA,22)
+Panel$ALTITUD <- rep(provincias.sf$ALTITUD,22)
+Panel$Lat <- rep(provincias.sf$Lat,22)
+Panel$TMax <- matrix(as.matrix(TMax[,17:38]),ncol=1)
+Panel$TMed <- matrix(as.matrix(TMed[,17:38]),ncol=1)
+Panel$TMedmm <- matrix(as.matrix(TMedmm[,10:31]),ncol=1)
+Panel$Hummm <- matrix(as.matrix(Hummm[,10:31]),ncol=1)
+Panel$Sunmm <- matrix(as.matrix(Sunmm[,10:31]),ncol=1)
+Panel$Plumm <- matrix(as.matrix(Plumm[,10:31]),ncol=1)
+Panel <- Panel[order(Panel$index),]
+```
+
+## Panel Clásico NO dinámico
+
+**El modelo debe considerar efectos del 'individuo' y del 'tiempo' (para incorporar tendencia temporal)**
+
+```{r}
+# Definicion del panel para plm
+GPanel <- plm::pdata.frame(Panel,c("index","time"))
+
+formula <- log(Inc) ~ log(TMedmm) + log(Hummm) + log(Sunmm+.1)
+model.ef <-  plm::plm(formula, data = GPanel, model = "within",effect = "twoways")
+summary(model.ef)
+```
+**RESUMEN modelo efectos fijos**
+
+1) La temperatura no es relevante. Probablemente ha sido incorporada en el efecto fijo asociado a cada provincia.
+2) Las horas de sol y la humedad aparecen con signos contrarios a lo espetado ¿?¿?
+3) El test de Hausman no reportado confirma que ef es preferible.
+
+## Panel NO dinámico con efectos espaciales
+
+Construcción de W
+
+```{r}
+# Definición matrix de contactos 
+W <- poly2nb(as(provincias.sf, "Spatial"), queen = FALSE)
+Wmat <- nb2mat(W,zero.policy = T)
+Wmat <- (Wmat>0)*1
+# Conexión de las dos provincias que forman Canarias
+Wmat[29,32] <- 1
+Wmat[32,29] <- 1
+# 'Paises Catalans'
+n=48
+Wmat[49,n] <- 1
+Wmat[n,49] <- 1
+Wmat[n,41] <- 1
+Wmat[41,n] <- 1
+Wmat[n,38] <- 1
+Wmat[38,n] <- 1
+miW <- Wmat/rowSums(Wmat)
+listw <- mat2listw(Wmat,style = "W")
+```
+
+
+```{r, warning=FALSE}
+# Modelo Pool
+formula <- log(Inc) ~ log(TMedmm) +  log(Sunmm + 1) + log(Hummm)
+model.splm <- spml(formula = formula, data = GPanel, 
+                   index = NULL, listw = listw, model = "within", effect="twoways" ,lag = TRUE, spatial.error = "none")
+summary(model.splm)
+```
+
+**RESUMEN modelo efectos fijos**
+
+1) Igual que el No dinámico
+2) Hay efectos espaciales
+
+## Panel Dinámico
+
+```{r, warning=FALSE}
+######################################
+# Panel DINAMICO
+######################################
+
+## Panel dinámico con dynpanel
+modelo.dinamico <- dynpanel::dpd(log(Inc) ~ log(TMedmm) + log(Hummm) + log(Sunmm+0.1),Panel,index=c("index","time"),1,4) 
+## 1 representa el orden de autocorrelación y 4 método Arellano&Bond(1991)
+summary(modelo.dinamico)
+```
+**RESUMEN modelo efectos fijos**
+
+1) Ninguna varaible climatologia es relevante. El tiempo se lo 'come todo'
+
+# Modelo SUR espacial
+
+Se incluyen dos variables de control para recoger la herogeneidad espacial
+* HM: ratio Hombres/Mujeres (signo esperado +)
+* EM: Edad media (signo esperado +)
+
+```{r}
+formula <- log(Inc) ~ log(HM) + log(EM) + log(TMedmm) + log(Sunmm+.1) + log(Hummm)
+model.sur.slm <- spsur::spsurtime(formula = formula, data=GPanel, time = GPanel$time, type = "slm",fit_method = "3sls",listw=listw)
+summary(model.sur.slm)
+```
+
+## Dinámica temporal de la dependencia espacial (Coef lambda estimado en las T=22 ecuaciones)
+
+```{r}
+mydates[14:35]
+```
+
+
+```{r}
+x <- model.sur.slm$deltas
+tvalue <- model.sur.slm$deltas/model.sur.slm$deltas.se
+mycolor <- rep("blue",22)
+mycolor[abs(tvalue)>1.64] <- "red"
+plot(1:22,x,type="b",pch = 19,col=mycolor,main="Dinamica temporal dependencia espacial")
+abline(v=c(3,10), col= c("red","blue"))
+abline(h=0, col= c("black"))
+```
+
+* La estructura de dependencia espacial, pasa de positiva (significativa) a no significativa para finalmente ser negativa (significativa)
+* Esto puede explicarse:
+- en una PRIMERA ETAPA al inicio del brote epidémico había contagio entre provincias colindantes.
+- en una SEGUNDA ETAPA Al introducir medidas de confinamiento las provincias quedaron 'aisladas' y cada una creció a un ritmo diferente. La estructura de dependencia espacial se 'disolvió'
+-  en una TERCERA ETAPA, en muchas provincias se controló parcialmente la epidemia. Salvo en X-provincias que siguieron creciendo fuertemente. Eso dio lugar a patrones de dependencia espacial negativa.
+
+# Analisis de los residuos del Modelo SUR sin efectos espaciales
+
+```{r}
+formula <- log(Inc) ~ log(HM) + log(EM) + log(TMedmm) + log(Sunmm+.1) + log(Hummm)
+model.sur <- spsur::spsurtime(formula = formula, data=GPanel, time = GPanel$time, type = "sim")
+residuos.sur <- as.matrix(residuals(model.sur))
+```
+
+plot de los residuos en la PRIMERA ETAPA Y EN LA TERCERA ETAPA
+
+```{r}
+provincias.sf$Res16Mar <- residuos.sur[[3]]
+plot(provincias.sf["Res16Mar"])
+provincias.sf$Res02Abr <- residuos.sur[[21]]
+plot(provincias.sf["Res02Abr"])
+```
+
+## Dinámica temporal de Variables de Control
+
+### ratio HM
+
+* No es significativa (signo esperado)
+
+```{r}
+mydates[14:35]
+n=2
+x <- matrix(model.sur.slm$coefficients,ncol = 22)[n,]
+tvalue <- matrix(model.sur.slm$coefficients/model.sur.slm$rest.se,ncol = 22)[n,]
+mycolor <- rep("blue",22)
+mycolor[abs(tvalue)>1.64] <- "red"
+plot(1:22,x,type="b",pch = 19,col=mycolor)
+abline(v=c(3,10), col= c("red","blue"))
+```
+
+### Edad Media
+
+* Los coeficientes de las variables de control (EM y HM) tienen el signo esperado
+* Los primeros días tienen valores elevados cuando la pandemía no estaba controlada (aún no había confinamiento)
+```{r}
+mydates[14:35]
+n=3
+x <- matrix(model.sur.slm$coefficients,ncol = 22)[n,]
+tvalue <- matrix(model.sur.slm$coefficients/model.sur.slm$rest.se,ncol = 22)[n,]
+mycolor <- rep("blue",22)
+mycolor[abs(tvalue)>1.64] <- "red"
+plot(1:22,x,type="b",pch = 19,col=mycolor)
+abline(v=c(3,10), col= c("red","blue"))
+```
+
+## Dinámica temporal de Variables Climáticas
+
+### TEMPERATURA
+
+
+* Los coeficientes de las variables de control (EM y HM) tienen el signo esperado
+* Los primeros días tienen valores elevados cuando la pandemía no estaba controlada (aún no había confinamiento)
+```{r}
+mydates[14:35]
+n=4
+x <- matrix(model.sur.slm$coefficients,ncol = 22)[n,]
+tvalue <- matrix(model.sur.slm$coefficients/model.sur.slm$rest.se,ncol = 22)[n,]
+mycolor <- rep("blue",22)
+mycolor[abs(tvalue)>1.64]="red"
+plot(1:22,x,type="b",pch = 19,col=mycolor)
+abline(v=c(3,10), col= c("red","blue"))
+```
+### Humedad
+
+```{r}
+mydates[14:35]
+n=5
+x <- matrix(model.sur.slm$coefficients,ncol = 22)[n,]
+tvalue <- matrix(model.sur.slm$coefficients/model.sur.slm$rest.se,ncol = 22)[n,]
+mycolor <- rep("blue",22)
+mycolor[abs(tvalue)>1.64]="red"
+plot(1:22,x,type="b",pch = 19,col=mycolor)
+abline(v=c(3,10), col= c("red","blue"))
+```
+
+
+
+### HORAS de Sol
+
+```{r}
+mydates[14:35]
+n=5
+x <- matrix(model.sur.slm$coefficients,ncol = 22)[n,]
+tvalue <- matrix(model.sur.slm$coefficients/model.sur.slm$rest.se,ncol = 22)[n,]
+mycolor <- rep("blue",22)
+mycolor[abs(tvalue)>1.64]="red"
+plot(1:22,x,type="b",pch = 19,col=mycolor)
+abline(v=c(3,10), col= c("red","blue"))
+```
+
+
+### El intercepto
+
+
+```{r}
+mydates[14:35]
+n=1
+x <- matrix(model.sur.slm$coefficients,ncol = 22)[n,]
+tvalue <- matrix(model.sur.slm$coefficients/model.sur.slm$rest.se,ncol = 22)[n,]
+mycolor <- rep("blue",22)
+mycolor[abs(tvalue)>1.64]="red"
+plot(1:22,x,type="b",pch = 19,col=mycolor)
+abline(v=c(3,10), col= c("red","blue"))
+legend("topleft", legend=c("signific", "Nosign"),
+       col=c("red", "blue"), lty = 1:2)
+```
+
+# ESTIMAR SUR ESPACIAL CON COEFICIENTES COSTANTES
+
+formula <- log(Inc) ~ log(HM) + log(EM) + log(TMedmm) + log(Sunmm+.1) + log(Hummm)
+
+coef_rest = 5
+R2 <- matrix(0,nrow = 21*coef_rest,ncol = 6*22)
+for (i in 1:21){
+R2[i,2] <- 1
+R2[i,(2+i*6)] <- -1
+R2[i+21,3] <- 1
+R2[i+21,(3+i*6)] <- -1
+R2[i+21*2,4] <- 1
+R2[i+21*2,(4+i*6)] <- -1
+R2[i+21*3,5] <- 1
+R2[i+21*3,(5+i*6)] <- -1
+R2[i+21*4,6] <- 1
+R2[i+21*4,(6+i*6)] <- -1
+
+# R2[2,2] <- 1
+# R2[2,(2+2*6)] <- -1
+# R2[3,2] <- 1
+# R2[3,(2+3*6)] <- -1
+}
+b2 <- matrix(0, ncol=21*coef_rest)
+
+panel.sur.slm <- spsurtime(formula = formula, data=GPanel, time = GPanel$time, R=R2, b=b2, type = "sim")
+summary(panel.sur.slm)
