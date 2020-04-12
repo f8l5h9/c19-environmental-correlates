@@ -13,7 +13,7 @@ knitr::opts_chunk$set(echo = TRUE)
 library(meteoland)
 library(geosphere)
 library(sf)
-library(aemet)
+#library(aemet)
 library(spdep)
 library(spsur)
 library(spatialreg)
@@ -118,7 +118,7 @@ Lo mismo para horas de Sol
 Detalles de la construccion de las variable etc están en el códico 'COVID-19-Datos-Climáticos-Spain.R'
 
 ```{r}
-load("~/Dropbox/COVID-19/COVID-19-Datos_Climaticos_Spain.RData")
+load("COVID-19-Datos_Climaticos_Spain.RData")
 ```
 
 ## Join temperatures to shp
