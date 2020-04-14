@@ -2,7 +2,9 @@
 title: "COVID-19-Spain-Analysis"
 author: "F.A. Lopez and A. Paez"
 date: "4/11/2020"
-output: html_document
+output:
+  pdf_document: default
+  html_document: default
 ---
 
 This notebook reports our initial analysis of COVID-19 incidence in Spain and the climatic correlates of incidence. The data have been organized in a package for ease of access and distribution. The name of the package is `covid19env` and if necessary can be installed from the GitHub repository.
@@ -222,7 +224,10 @@ GPanel <- plm::pdata.frame(covid19_spain %>%
                                      Sunshine_Hours_lag8,
                                      Mean_Temp_lag11,
                                      Humidity_lag11,
-                                     Sunshine_Hours_lag11),
+                                     Sunshine_Hours_lag11,
+                                     Mean_Temp_lag11w,
+                                     Humidity_lag11w,
+                                     Sunshine_Hours_lag11w),
                             c("province","Date"))
 
 ```
@@ -276,6 +281,12 @@ formula_lag11 <- log(Incidence) ~ log(Male2Female) +
   log(Mean_Temp_lag11) + 
   log(Sunshine_Hours_lag11 + 0.1) + 
   log(Humidity_lag11)
+
+formula_lag11w <- log(Incidence) ~ log(Male2Female) + 
+  log(Median_Age) + 
+  log(Mean_Temp_lag11w) + 
+  log(Sunshine_Hours_lag11w + 0.1) + 
+  log(Humidity_lag11w)
 ```
 
 Model with 8-day moving average of climatic variables:
@@ -300,10 +311,22 @@ sur.slm_lag11 <- spsur::spsurtime(formula = formula_lag11,
 summary(sur.slm_lag11)
 ```
 
+Model with 11-day weighted moving average of climatic variables:
+```{r}
+sur.slm_lag11w <- spsur::spsurtime(formula = formula_lag11w, 
+                                  data=GPanel, 
+                                  time = GPanel$Date, 
+                                  type = "slm", 
+                                  fit_method = "3sls", 
+                                  listw=  listw)
+summary(sur.slm_lag11w)
+```
+
 Compare goodness of fit:
 ```{r}
 data.frame(R2_lag8 = sur.slm_lag8$R2, 
-           R2_lag11 = sur.slm_lag11$R2) %>%
+           R2_lag11 = sur.slm_lag11$R2,
+           R2_lag11w = sur.slm_lag11w$R2) %>%
   slice(2:n()) %>%
   rownames_to_column(var = "Equation") %>%
   mutate(Date = seq(ymd("2020-03-14"), 
@@ -312,7 +335,7 @@ data.frame(R2_lag8 = sur.slm_lag8$R2,
   pivot_longer(cols = starts_with("R"), names_to = "Model", values_to = "R2") %>%
   ggplot(aes(x = Date, y = R2, color = Model, shape = Model)) +
   geom_point(size = 2) +
-  scale_color_manual(values = c("R2_lag11" = "orange", "R2_lag8" = "green") ) + 
+  scale_color_manual(values = c("R2_lag11w" = "blue", "R2_lag11" = "orange", "R2_lag8" = "green") ) + 
   theme_tufte()
 
 ```
@@ -323,8 +346,8 @@ data.frame(R2_lag8 = sur.slm_lag8$R2,
 data.frame(Date = seq(ymd("2020-03-14"), 
                         ymd("2020-04-04"), 
                             by = "days"),
-           Deltas = sur.slm_lag11$deltas,
-           tvalue = sur.slm_lag11$deltas/sur.slm_lag11$deltas.se) %>%
+           Deltas = sur.slm_lag11w$deltas,
+           tvalue = sur.slm_lag11w$deltas/sur.slm_lag11$deltas.se) %>%
   mutate(sig = ifelse(abs(tvalue) > 1.64, "Significant at 5%", "Not Significant at 5%")) %>%
   ggplot(aes(x = Date, y = Deltas, color = sig)) +
   geom_point(size = 2) +
@@ -342,12 +365,13 @@ data.frame(Date = seq(ymd("2020-03-14"),
 
 # Analisis of autocorrelated residuals
 
-Extract residuals for March 14 and April 2, and compute autocorrelated residuals on March 14:
+Extract residuals for March 14 and April 2, and compute autocorrelated residuals:
 ```{r}
-residuals_Mar14 <- as.matrix(residuals(sur.slm_lag11))[[1]]
+residuals_Mar14 <- as.matrix(residuals(sur.slm_lag11w))[[1]]
 residuals_Mar14 <- lag.listw(listw, residuals_Mar14)
 
-residuals_Apr02 <- as.matrix(residuals(sur.slm_lag11))[[20]]
+residuals_Apr04 <- as.matrix(residuals(sur.slm_lag11w))[[22]]
+residuals_Apr04 <- lag.listw(listw, residuals_Apr04)
 ```
 
 Plot residuals on March 14 (positive autocorrelation):
@@ -361,13 +385,13 @@ covid19_spain %>% filter(Date == "2020-03-14") %>%
   theme_tufte()
 ```
 
-Plot residuals on April 2 (delta is not significant):
+Plot residuals on April 4:
 ```{r}
 covid19_spain %>% filter(Date == "2020-03-14") %>% 
-  mutate(ResApr02 = residuals_Apr02) %>% 
+  mutate(ResApr04 = residuals_Apr04) %>% 
   filter(CCAA != "Canarias") %>%
   ggplot() +
-  geom_sf(aes(fill = ResApr02)) +
+  geom_sf(aes(fill = ResApr04)) +
   scale_fill_distiller(palette = "RdBu", direction = 1) +
   theme_tufte()
 ```
@@ -382,8 +406,8 @@ n = 2
 data.frame(Date = seq(ymd("2020-03-14"), 
                         ymd("2020-04-04"), 
                             by = "days"),
-           Beta = matrix(sur.slm_lag11$coefficients,ncol = 22)[n,],
-           tvalue = matrix(sur.slm_lag11$coefficients/sur.slm_lag11$rest.se,ncol = 22)[n,]) %>%
+           Beta = matrix(sur.slm_lag11w$coefficients,ncol = 22)[n,],
+           tvalue = matrix(sur.slm_lag11w$coefficients/sur.slm_lag11w$rest.se,ncol = 22)[n,]) %>%
   mutate(sig = ifelse(abs(tvalue) > 1.64, "Significant at 5%", "Not Significant at 5%")) %>%
   ggplot(aes(x = Date, y = Beta, color = sig)) +
   geom_point(size = 2) +
@@ -402,8 +426,8 @@ n = 3
 data.frame(Date = seq(ymd("2020-03-14"), 
                         ymd("2020-04-04"), 
                             by = "days"),
-           Beta = matrix(sur.slm_lag11$coefficients,ncol = 22)[n,],
-           tvalue = matrix(sur.slm_lag11$coefficients/sur.slm_lag11$rest.se,ncol = 22)[n,]) %>%
+           Beta = matrix(sur.slm_lag11w$coefficients,ncol = 22)[n,],
+           tvalue = matrix(sur.slm_lag11w$coefficients/sur.slm_lag11w$rest.se,ncol = 22)[n,]) %>%
   mutate(sig = ifelse(abs(tvalue) > 1.64, "Significant at 5%", "Not Significant at 5%")) %>%
   ggplot(aes(x = Date, y = Beta, color = sig)) +
   geom_point(size = 2) +
@@ -424,8 +448,8 @@ n = 4
 data.frame(Date = seq(ymd("2020-03-14"), 
                         ymd("2020-04-04"), 
                             by = "days"),
-           Beta = matrix(sur.slm_lag11$coefficients,ncol = 22)[n,],
-           tvalue = matrix(sur.slm_lag11$coefficients/sur.slm_lag11$rest.se,ncol = 22)[n,]) %>%
+           Beta = matrix(sur.slm_lag11w$coefficients,ncol = 22)[n,],
+           tvalue = matrix(sur.slm_lag11w$coefficients/sur.slm_lag11$rest.se,ncol = 22)[n,]) %>%
   mutate(sig = ifelse(abs(tvalue) > 1.64, "Significant at 5%", "Not Significant at 5%")) %>%
   ggplot(aes(x = Date, y = Beta, color = sig)) +
   geom_point(size = 2) +
@@ -435,9 +459,6 @@ data.frame(Date = seq(ymd("2020-03-14"),
   theme_tufte()
 ```
 
-
-
-
 ### Hours of sunshine
 
 ```{r}
@@ -445,8 +466,8 @@ n = 5
 data.frame(Date = seq(ymd("2020-03-14"), 
                         ymd("2020-04-04"), 
                             by = "days"),
-           Beta = matrix(sur.slm_lag11$coefficients,ncol = 22)[n,],
-           tvalue = matrix(sur.slm_lag11$coefficients/sur.slm_lag11$rest.se,ncol = 22)[n,]) %>%
+           Beta = matrix(sur.slm_lag11w$coefficients,ncol = 22)[n,],
+           tvalue = matrix(sur.slm_lag11w$coefficients/sur.slm_lag11w$rest.se,ncol = 22)[n,]) %>%
   mutate(sig = ifelse(abs(tvalue) > 1.64, "Significant at 5%", "Not Significant at 5%")) %>%
   ggplot(aes(x = Date, y = Beta, color = sig)) +
   geom_point(size = 2) +
@@ -463,8 +484,8 @@ n = 6
 data.frame(Date = seq(ymd("2020-03-14"), 
                         ymd("2020-04-04"), 
                             by = "days"),
-           Beta = matrix(sur.slm_lag11$coefficients,ncol = 22)[n,],
-           tvalue = matrix(sur.slm_lag11$coefficients/sur.slm_lag11$rest.se,ncol = 22)[n,]) %>%
+           Beta = matrix(sur.slm_lag11w$coefficients,ncol = 22)[n,],
+           tvalue = matrix(sur.slm_lag11w$coefficients/sur.slm_lag11w$rest.se,ncol = 22)[n,]) %>%
   mutate(sig = ifelse(abs(tvalue) > 1.64, "Significant at 5%", "Not Significant at 5%")) %>%
   ggplot(aes(x = Date, y = Beta, color = sig)) +
   geom_point(size = 2) +
@@ -481,8 +502,8 @@ n = 1
 data.frame(Date = seq(ymd("2020-03-14"), 
                         ymd("2020-04-04"), 
                             by = "days"),
-           Beta = matrix(sur.slm_lag11$coefficients,ncol = 22)[n,],
-           tvalue = matrix(sur.slm_lag11$coefficients/sur.slm_lag11$rest.se,ncol = 22)[n,]) %>%
+           Beta = matrix(sur.slm_lag11w$coefficients,ncol = 22)[n,],
+           tvalue = matrix(sur.slm_lag11w$coefficients/sur.slm_lag11w$rest.se,ncol = 22)[n,]) %>%
   mutate(sig = ifelse(abs(tvalue) > 1.64, "Significant at 5%", "Not Significant at 5%")) %>%
   ggplot(aes(x = Date, y = Beta, color = sig)) +
   geom_point(size = 2) +
