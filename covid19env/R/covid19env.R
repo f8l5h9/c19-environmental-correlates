@@ -15,7 +15,7 @@ NULL
 #' A dataset containing COVID-19 information for Spain, including
 #' environmental correlates and some control variables.
 #'
-#' @format A simple features dataframe with 1150 rows and 25 variables:
+#' @format A simple features dataframe with 1100 rows and 25 variables:
 #' \describe{
 #'   \item{Province}{Names of provinces in Spain as factor}
 #'   \item{CCAA}{Names of Autonomous Communities in Spain as factor}
@@ -23,6 +23,7 @@ NULL
 #'   \item{Date}{Date}
 #'   \item{Cases}{Number of COVID-19 cases reported in the province by date}
 #'   \item{Incidence}{Incidence of COVID-19 cases per 100,000 population in the province by date}
+#'   \item{Population}{Population in the province in 2020}
 #'   \item{Older}{Percentage of population 65 and older in the provice in 2020}
 #'   \item{Median_Age}{Median age of population in the province in 2020}
 #'   \item{Male2Female}{Ratio of male to female population in the province in 2020}
@@ -30,12 +31,12 @@ NULL
 #'   \item{Altitude}{Altitude of the province}
 #'   \item{Coast}{A dummy variable that indicates whether the province is in the coast; 1: YES}
 #'   \item{Meteo_Station}{Identifier of meteorological station representative of the province used to retrieve climatic variables}
-#'   \item{Max_Temp}{Maximum temperature registered by the meteorological station representative of the province}
-#'   \item{Min_Temp}{Minimum temperature registered by the meteorological station representative of the province}
-#'   \item{Mean_Temp}{Mean temperature registered by the meteorological station representative of the province}
-#'   \item{Mean_Temp_lag}{8-day average of the mean temperature, calculated using the values between date-minus-12-days and date-minus-5-days}
-#'   \item{Sunshine_Hours}{Hours of sunshine registered by the meteorological station representative of the province}
-#'   \item{Sunshine_Hours_lag}{8-day average of sunshine hours, calculated using the values between date-minus-12-days and date-minus-5-days}
+#'   \item{Max_Temp}{Maximum temperature registered by the meteorological station representative of the province in Celsius}
+#'   \item{Min_Temp}{Minimum temperature registered by the meteorological station representative of the province in Celsius}
+#'   \item{Mean_Temp}{Mean temperature registered by the meteorological station representative of the province in Celsius}
+#'   \item{Mean_Temp_lag}{8-day average of the mean temperature, calculated using the values between date-minus-12-days and date-minus-5-days in Celsius}
+#'   \item{Sunshine_Hours}{Hours of sunshine registered by the meteorological station representative of the province in hours}
+#'   \item{Sunshine_Hours_lag}{8-day average of sunshine hours, calculated using the values between date-minus-12-days and date-minus-5-days in hours}
 #'   \item{Precipitation}{Precipitation registered by the meteorological station representative of the province}
 #'   \item{Precipitation_lag}{8-day average of the precipitation, calculated using the values between date-minus-12-days and date-minus-5-days}
 #'   \item{Humidity}{Calculated humidity}
@@ -47,9 +48,22 @@ NULL
 #' @keywords datasets
 #' @name covid19_spain
 #' @usage data(covid19_spain)
-#' @source Energy Consumption Data Source: CIA Factbook, Refined Oil Products Consumption (https://www.cia.gov/library/publications/the-world-factbook/rankorder/2246rank.html) Accessed: September 5, 2017
-#' @source CO2 Emissions Data Source: EC Emissions Database for Global Atmospheric Research (http://edgar.jrc.ec.europa.eu/overview.php?v=CO2ts1990-2015) Accessed: September 5, 2017
-#' @source GDP Data Source: Wikipedia (https://en.wikipedia.org/wiki/List_of_countries_by_GDP_(nominal)_per_capita) Accessed: September 5, 2017
+#' @source Population and demographic data: Instituto Nacional de Estadistica http://www.ine.es/
+#' @source Climatic data: Agencia Estatal de Meteorologia http://www.aemet.es/
+#' @source
+#'   COVID-19 data:
+#'
+#'   Ministerio de Sanidad, Consumo y Bienestar Social: https://www.mscbs.gob.es/profesionales/saludPublica/ccayes/alertasActual/nCov-China/situacionActual.htm y gabinete de prensa del Ministerio de Sanidad.
+#'
+#'   Departamento de Seguridad Nacional: https://www.dsn.gob.es/gl/current-affairs/press-room
+#'
+#'   Instituto de Salud Carlos III. Situación de COVID-19 en España https://covid19.isciii.es/
+#'
+#'   BOE: Crisis Sanitaria COVID-19 https://www.boe.es/biblioteca_juridica/codigos/codigo.php?id=355&modo=2&nota=0&tab=2
+#'
+#'   Ministerio de Transportes, Movilidad y Agenda Urbana https://www.mitma.gob.es/transporte-terrestre/punto-de-informacion-de-servicios-de-restauracion
+#'
+#'   Data collected by datadista https://github.com/datadista/datasets/tree/master/COVID%2019
 #' @examples
 #'  data(covid19_spain)
 #'  summary(covid19_spain)
