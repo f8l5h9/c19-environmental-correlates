@@ -204,156 +204,134 @@ covid19_spain %>%
 * Permite incluir varaibles constantes en T.
 * la dinámica temporar quedará recogida mediante el término independiente y la estructura de correlaciones en los residuos. EN TODO CASO, ENTIENDO QUE NUESTRO OBJETIVO NO ES EXPLICAR ESA TENEDENCIA TEMPORAL (solo modelizarla para no incurrir en errores)
 
+## Prepare data for SUR analysis
 
-## Panel
-
-### Prepare data for panel analysis
-```{r}
-######################################
-# Panel clásico
-######################################
-# Construccion del Panel
-Panel <- as.factor(rep(provincias.sf$PROVINCIA,22))
-Panel <- as.data.frame(Panel)
-names(Panel) <- c("index")
-Panel$time <- as.integer(Matrix::kronecker(1:22,rep(1,50)))
-Panel$PROV <- as.factor(rep(provincias.sf$ID_INE,22))
-Panel$Inc <- matrix(as.matrix(Inc[,1:22]),ncol=1) 
-Panel$HM <- rep(provincias.sf$HOM_MUJ,22)
-Panel$EM <- rep(provincias.sf$EDAD_MED,22)
-Panel$COSTA <- rep(provincias.sf$COSTA,22)
-Panel$ALTITUD <- rep(provincias.sf$ALTITUD,22)
-Panel$Lat <- rep(provincias.sf$Lat,22)
-Panel$TMax <- matrix(as.matrix(TMax[,17:38]),ncol=1)
-Panel$TMed <- matrix(as.matrix(TMed[,17:38]),ncol=1)
-Panel$TMedmm <- matrix(as.matrix(TMedmm[,10:31]),ncol=1)
-Panel$Hummm <- matrix(as.matrix(Hummm[,10:31]),ncol=1)
-Panel$Sunmm <- matrix(as.matrix(Sunmm[,10:31]),ncol=1)
-Panel$Plumm <- matrix(as.matrix(Plumm[,10:31]),ncol=1)
-Panel <- Panel[order(Panel$index),]
-```
-
-## Panel Clásico NO dinámico
-
-**El modelo debe considerar efectos del 'individuo' y del 'tiempo' (para incorporar tendencia temporal)**
+*El modelo debe considerar efectos del 'individuo' y del 'tiempo' (para incorporar tendencia temporal)**
 
 ```{r}
 # Definicion del panel para plm
-GPanel2 <- plm::pdata.frame(covid19_spain %>% 
+GPanel <- plm::pdata.frame(covid19_spain %>% 
                               st_drop_geometry() %>%
                               select(province, 
                                      Date,
                                      Incidence, 
                                      Median_Age,
                                      Male2Female,
-                                     Mean_Temp_lag,
-                                     Humidity_lag,
-                                     Sunshine_Hours_lag),
+                                     Mean_Temp_lag8,
+                                     Humidity_lag8,
+                                     Sunshine_Hours_lag8,
+                                     Mean_Temp_lag11,
+                                     Humidity_lag11,
+                                     Sunshine_Hours_lag11),
                             c("province","Date"))
 
-formula <- log(Incidence) ~ log(Mean_Temp_lag) + log(Humidity_lag) + log(Sunshine_Hours_lag + .1)
-model.ef <-  plm::plm(formula, data = GPanel2, model = "within",effect = "twoways")
-summary(model.ef)
 ```
-**RESUMEN modelo efectos fijos**
 
-1) La temperatura no es relevante. Probablemente ha sido incorporada en el efecto fijo asociado a cada provincia.
-2) Las horas de sol y la humedad aparecen con signos contrarios a lo espetado ¿?¿?
-3) El test de Hausman no reportado confirma que ef es preferible.
-
-## Panel NO dinámico con efectos espaciales
+# Modelo SUR espacial
 
 Construcción de W
 
 ```{r}
 # Definición matrix de contactos 
-junk <- covid19_spain %>% 
+Wmat <- covid19_spain %>% 
   filter(Date == "2020-03-14") %>%
   as("Spatial") %>%
   poly2nb(queen = FALSE) %>%
   nb2mat(zero.policy = T)
 
-junk <- (junk > 0) * 1
+Wmat <- (Wmat > 0) * 1
 
 #W <- poly2nb(as(provincias.sf, "Spatial"), queen = FALSE)
 #Wmat <- nb2mat(W,zero.policy = T)
 #Wmat <- (Wmat>0)*1
 # Conexión de las dos provincias que forman Canarias
-junk[37, 44] <- 1
-junk[44, 37] <- 1
+Wmat[37, 44] <- 1
+Wmat[44, 37] <- 1
 # 'Paises Catalans'
 n = 8
-junk[9,n] <- 1
-junk[n,9] <- 1
-junk[n,47] <- 1
-junk[47,n] <- 1
-junk[n,43] <- 1
-junk[43,n] <- 1
-miW <- junk/rowSums(junk)
-junkw <- mat2listw(junk,style = "W")
+Wmat[9,n] <- 1
+Wmat[n,9] <- 1
+Wmat[n,47] <- 1
+Wmat[47,n] <- 1
+Wmat[n,43] <- 1
+Wmat[43,n] <- 1
+miW <- Wmat/rowSums(Wmat)
+listw <- mat2listw(Wmat,style = "W")
 ```
-
-
-```{r, warning=FALSE}
-# Modelo Pool
-formula <- log(Inc) ~ log(TMedmm) +  log(Sunmm + 1) + log(Hummm)
-model.splm <- spml(formula = formula, data = GPanel, 
-                   index = NULL, listw = listw, model = "within", effect="twoways" ,lag = TRUE, spatial.error = "none")
-summary(model.splm)
-```
-
-**RESUMEN modelo efectos fijos**
-
-1) Igual que el No dinámico
-2) Hay efectos espaciales
-
-## Panel Dinámico
-
-```{r, warning=FALSE}
-######################################
-# Panel DINAMICO
-######################################
-
-## Panel dinámico con dynpanel
-modelo.dinamico <- dynpanel::dpd(log(Inc) ~ log(TMedmm) + log(Hummm) + log(Sunmm+0.1),Panel,index=c("index","time"),1,4) 
-## 1 representa el orden de autocorrelación y 4 método Arellano&Bond(1991)
-summary(modelo.dinamico)
-```
-**RESUMEN modelo efectos fijos**
-
-1) Ninguna varaible climatologia es relevante. El tiempo se lo 'come todo'
-
-# Modelo SUR espacial
 
 Se incluyen dos variables de control para recoger la herogeneidad espacial
 * HM: ratio Hombres/Mujeres (signo esperado +)
 * EM: Edad media (signo esperado +)
 
+Define formulas with two different lagged variables:
 ```{r}
-formula <- log(Incidence) ~ log(Male2Female) + 
+formula_lag8 <- log(Incidence) ~ log(Male2Female) + 
   log(Median_Age) + 
-  log(Mean_Temp_lag) + 
-  log(Sunshine_Hours_lag + 0.1) + 
-  log(Humidity_lag)
-model.sur.slm <- spsur::spsurtime(formula = formula, data=GPanel2, time = GPanel2$Date, type = "slm", fit_method = "3sls", listw=junkw)
-summary(model.sur.slm)
+  log(Mean_Temp_lag8) + 
+  log(Sunshine_Hours_lag8 + 0.1) + 
+  log(Humidity_lag8)
+
+formula_lag11 <- log(Incidence) ~ log(Male2Female) + 
+  log(Median_Age) + 
+  log(Mean_Temp_lag11) + 
+  log(Sunshine_Hours_lag11 + 0.1) + 
+  log(Humidity_lag11)
+```
+
+Model with 8-day moving average of climatic variables:
+```{r}
+sur.slm_lag8 <- spsur::spsurtime(formula = formula_lag8, 
+                                  data=GPanel, 
+                                  time = GPanel$Date, 
+                                  type = "slm", 
+                                  fit_method = "3sls", 
+                                  listw=  listw)
+summary(sur.slm_lag8)
+```
+
+Model with 11-day moving average of climatic variables:
+```{r}
+sur.slm_lag11 <- spsur::spsurtime(formula = formula_lag11, 
+                                  data=GPanel, 
+                                  time = GPanel$Date, 
+                                  type = "slm", 
+                                  fit_method = "3sls", 
+                                  listw=  listw)
+summary(sur.slm_lag11)
+```
+
+Compare goodness of fit:
+```{r}
+data.frame(R2_lag8 = sur.slm_lag8$R2, 
+           R2_lag11 = sur.slm_lag11$R2) %>%
+  slice(2:n()) %>%
+  rownames_to_column(var = "Equation") %>%
+  mutate(Date = seq(ymd("2020-03-14"), 
+                        ymd("2020-04-04"), 
+                            by = "days")) %>%
+  pivot_longer(cols = starts_with("R"), names_to = "Model", values_to = "R2") %>%
+  ggplot(aes(x = Date, y = R2, color = Model, shape = Model)) +
+  geom_point(size = 2) +
+  scale_color_manual(values = c("R2_lag11" = "orange", "R2_lag8" = "green") ) + 
+  theme_tufte()
+
 ```
 
 ## Dinámica temporal de la dependencia espacial (Coef lambda estimado en las T=22 ecuaciones)
 
 ```{r}
-mydates[14:35]
-```
-
-
-```{r}
-x <- model.sur.slm$deltas
-tvalue <- model.sur.slm$deltas/model.sur.slm$deltas.se
-mycolor <- rep("blue",22)
-mycolor[abs(tvalue)>1.64] <- "red"
-plot(1:22, x, type="b", pch = 19,col=mycolor, main="Dinamica temporal dependencia espacial")
-abline(v=c(3,10), col= c("red","blue"))
-abline(h=0, col= c("black"))
+data.frame(Date = seq(ymd("2020-03-14"), 
+                        ymd("2020-04-04"), 
+                            by = "days"),
+           Deltas = sur.slm_lag11$deltas,
+           tvalue = sur.slm_lag11$deltas/sur.slm_lag11$deltas.se) %>%
+  mutate(sig = ifelse(abs(tvalue) > 1.64, "Significant at 5%", "Not Significant at 5%")) %>%
+  ggplot(aes(x = Date, y = Deltas, color = sig)) +
+  geom_point(size = 2) +
+  scale_color_manual(values = c("Significant at 5%" = "red", "Not Significant at 5%" = "blue")) +
+  geom_hline(yintercept = 0) +
+  geom_vline(xintercept = as_date("2020-03-16"), color = "red") +
+  theme_tufte()
 ```
 
 * La estructura de dependencia espacial, pasa de positiva (significativa) a no significativa para finalmente ser negativa (significativa)
@@ -362,33 +340,31 @@ abline(h=0, col= c("black"))
 - en una SEGUNDA ETAPA Al introducir medidas de confinamiento las provincias quedaron 'aisladas' y cada una creció a un ritmo diferente. La estructura de dependencia espacial se 'disolvió'
 -  en una TERCERA ETAPA, en muchas provincias se controló parcialmente la epidemia. Salvo en X-provincias que siguieron creciendo fuertemente. Eso dio lugar a patrones de dependencia espacial negativa.
 
-# Analisis de los residuos del Modelo SUR sin efectos espaciales
+# Analisis of autocorrelated residuals
 
+Extract residuals for March 14 and April 2, and compute autocorrelated residuals on March 14:
 ```{r}
-formula <- log(Incidence) ~ log(Male2Female) + 
-  log(Median_Age) + 
-  log(Mean_Temp_lag) + 
-  log(Sunshine_Hours_lag + 0.1) + 
-  log(Humidity_lag)
-model.sur <- spsur::spsurtime(formula = formula, data=GPanel2, time = GPanel2$Date, type = "sim")
-residuos.sur <- as.matrix(residuals(model.sur))
+residuals_Mar14 <- as.matrix(residuals(sur.slm_lag11))[[1]]
+residuals_Mar14 <- lag.listw(listw, residuals_Mar14)
+
+residuals_Apr02 <- as.matrix(residuals(sur.slm_lag11))[[20]]
 ```
 
-Plot residuals on March 16:
+Plot residuals on March 14 (positive autocorrelation):
 ```{r}
-covid19_spain %>% filter(Date == "2020-03-16") %>% 
-  mutate(ResMarch16 = residuos.sur[[3]]) %>% 
+covid19_spain %>% filter(Date == "2020-03-14") %>% 
+  mutate(ResMarch14 = residuals_Mar14) %>% 
   filter(CCAA != "Canarias") %>%
   ggplot() +
-  geom_sf(aes(fill = ResMarch16)) +
+  geom_sf(aes(fill = ResMarch14)) +
   scale_fill_distiller(palette = "RdBu", direction = 1) +
   theme_tufte()
 ```
 
-Plot residuals on April 2:
+Plot residuals on April 2 (delta is not significant):
 ```{r}
-covid19_spain %>% filter(Date == "2020-03-16") %>% 
-  mutate(ResApr02 = residuos.sur[[21]]) %>% 
+covid19_spain %>% filter(Date == "2020-03-14") %>% 
+  mutate(ResApr02 = residuals_Apr02) %>% 
   filter(CCAA != "Canarias") %>%
   ggplot() +
   geom_sf(aes(fill = ResApr02)) +
@@ -396,124 +372,122 @@ covid19_spain %>% filter(Date == "2020-03-16") %>%
   theme_tufte()
 ```
 
-## Dinámica temporal de Variables de Control
+## Temporal variation of coefficients of control variables
 
-### ratio HM
+### Male to Female Ratio
 
-* No es significativa (signo esperado)
-
+* No es significativa
 ```{r}
-mydates[14:35]
-n=2
-x <- matrix(model.sur.slm$coefficients,ncol = 22)[n,]
-tvalue <- matrix(model.sur.slm$coefficients/model.sur.slm$rest.se,ncol = 22)[n,]
-mycolor <- rep("blue",22)
-mycolor[abs(tvalue)>1.64] <- "red"
-plot(1:22,x,type="b",pch = 19,col=mycolor)
-abline(v=c(3,10), col= c("red","blue"))
+n = 2
+data.frame(Date = seq(ymd("2020-03-14"), 
+                        ymd("2020-04-04"), 
+                            by = "days"),
+           Beta = matrix(sur.slm_lag11$coefficients,ncol = 22)[n,],
+           tvalue = matrix(sur.slm_lag11$coefficients/sur.slm_lag11$rest.se,ncol = 22)[n,]) %>%
+  mutate(sig = ifelse(abs(tvalue) > 1.64, "Significant at 5%", "Not Significant at 5%")) %>%
+  ggplot(aes(x = Date, y = Beta, color = sig)) +
+  geom_point(size = 2) +
+  scale_color_manual(values = c("Significant at 5%" = "red", "Not Significant at 5%" = "blue")) +
+  geom_hline(yintercept = 0) +
+  geom_vline(xintercept = as_date("2020-03-16"), color = "red") +
+  theme_tufte()
 ```
 
-### Edad Media
+### Median Age
 
 * Los coeficientes de las variables de control (EM y HM) tienen el signo esperado
 * Los primeros días tienen valores elevados cuando la pandemía no estaba controlada (aún no había confinamiento)
 ```{r}
-mydates[14:35]
-n=3
-x <- matrix(model.sur.slm$coefficients,ncol = 22)[n,]
-tvalue <- matrix(model.sur.slm$coefficients/model.sur.slm$rest.se,ncol = 22)[n,]
-mycolor <- rep("blue",22)
-mycolor[abs(tvalue)>1.64] <- "red"
-plot(1:22,x,type="b",pch = 19,col=mycolor)
-abline(v=c(3,10), col= c("red","blue"))
+n = 3
+data.frame(Date = seq(ymd("2020-03-14"), 
+                        ymd("2020-04-04"), 
+                            by = "days"),
+           Beta = matrix(sur.slm_lag11$coefficients,ncol = 22)[n,],
+           tvalue = matrix(sur.slm_lag11$coefficients/sur.slm_lag11$rest.se,ncol = 22)[n,]) %>%
+  mutate(sig = ifelse(abs(tvalue) > 1.64, "Significant at 5%", "Not Significant at 5%")) %>%
+  ggplot(aes(x = Date, y = Beta, color = sig)) +
+  geom_point(size = 2) +
+  scale_color_manual(values = c("Significant at 5%" = "red", "Not Significant at 5%" = "blue")) +
+  geom_hline(yintercept = 0) +
+  geom_vline(xintercept = as_date("2020-03-16"), color = "red") +
+  theme_tufte()
 ```
 
 ## Dinámica temporal de Variables Climáticas
 
 ### TEMPERATURA
 
-
 * Los coeficientes de las variables de control (EM y HM) tienen el signo esperado
 * Los primeros días tienen valores elevados cuando la pandemía no estaba controlada (aún no había confinamiento)
 ```{r}
-mydates[14:35]
-n=4
-x <- matrix(model.sur.slm$coefficients,ncol = 22)[n,]
-tvalue <- matrix(model.sur.slm$coefficients/model.sur.slm$rest.se,ncol = 22)[n,]
-mycolor <- rep("blue",22)
-mycolor[abs(tvalue)>1.64]="red"
-plot(1:22,x,type="b",pch = 19,col=mycolor)
-abline(v=c(3,10), col= c("red","blue"))
+n = 4
+data.frame(Date = seq(ymd("2020-03-14"), 
+                        ymd("2020-04-04"), 
+                            by = "days"),
+           Beta = matrix(sur.slm_lag11$coefficients,ncol = 22)[n,],
+           tvalue = matrix(sur.slm_lag11$coefficients/sur.slm_lag11$rest.se,ncol = 22)[n,]) %>%
+  mutate(sig = ifelse(abs(tvalue) > 1.64, "Significant at 5%", "Not Significant at 5%")) %>%
+  ggplot(aes(x = Date, y = Beta, color = sig)) +
+  geom_point(size = 2) +
+  scale_color_manual(values = c("Significant at 5%" = "red", "Not Significant at 5%" = "blue")) +
+  geom_hline(yintercept = 0) +
+  geom_vline(xintercept = as_date("2020-03-16"), color = "red") +
+  theme_tufte()
 ```
-### Humedad
+
+
+
+
+### Hours of sunshine
 
 ```{r}
-mydates[14:35]
-n=5
-x <- matrix(model.sur.slm$coefficients,ncol = 22)[n,]
-tvalue <- matrix(model.sur.slm$coefficients/model.sur.slm$rest.se,ncol = 22)[n,]
-mycolor <- rep("blue",22)
-mycolor[abs(tvalue)>1.64]="red"
-plot(1:22,x,type="b",pch = 19,col=mycolor)
-abline(v=c(3,10), col= c("red","blue"))
+n = 5
+data.frame(Date = seq(ymd("2020-03-14"), 
+                        ymd("2020-04-04"), 
+                            by = "days"),
+           Beta = matrix(sur.slm_lag11$coefficients,ncol = 22)[n,],
+           tvalue = matrix(sur.slm_lag11$coefficients/sur.slm_lag11$rest.se,ncol = 22)[n,]) %>%
+  mutate(sig = ifelse(abs(tvalue) > 1.64, "Significant at 5%", "Not Significant at 5%")) %>%
+  ggplot(aes(x = Date, y = Beta, color = sig)) +
+  geom_point(size = 2) +
+  scale_color_manual(values = c("Significant at 5%" = "red", "Not Significant at 5%" = "blue")) +
+  geom_hline(yintercept = 0) +
+  geom_vline(xintercept = as_date("2020-03-16"), color = "red") +
+  theme_tufte()
 ```
 
-
-
-### HORAS de Sol
+### Humidity
 
 ```{r}
-mydates[14:35]
-n=5
-x <- matrix(model.sur.slm$coefficients,ncol = 22)[n,]
-tvalue <- matrix(model.sur.slm$coefficients/model.sur.slm$rest.se,ncol = 22)[n,]
-mycolor <- rep("blue",22)
-mycolor[abs(tvalue)>1.64]="red"
-plot(1:22,x,type="b",pch = 19,col=mycolor)
-abline(v=c(3,10), col= c("red","blue"))
+n = 6
+data.frame(Date = seq(ymd("2020-03-14"), 
+                        ymd("2020-04-04"), 
+                            by = "days"),
+           Beta = matrix(sur.slm_lag11$coefficients,ncol = 22)[n,],
+           tvalue = matrix(sur.slm_lag11$coefficients/sur.slm_lag11$rest.se,ncol = 22)[n,]) %>%
+  mutate(sig = ifelse(abs(tvalue) > 1.64, "Significant at 5%", "Not Significant at 5%")) %>%
+  ggplot(aes(x = Date, y = Beta, color = sig)) +
+  geom_point(size = 2) +
+  scale_color_manual(values = c("Significant at 5%" = "red", "Not Significant at 5%" = "blue")) +
+  geom_hline(yintercept = 0) +
+  geom_vline(xintercept = as_date("2020-03-16"), color = "red") +
+  theme_tufte()
 ```
 
-
-### El intercepto
-
+### Intercept
 
 ```{r}
-mydates[14:35]
-n=1
-x <- matrix(model.sur.slm$coefficients,ncol = 22)[n,]
-tvalue <- matrix(model.sur.slm$coefficients/model.sur.slm$rest.se,ncol = 22)[n,]
-mycolor <- rep("blue",22)
-mycolor[abs(tvalue)>1.64]="red"
-plot(1:22,x,type="b",pch = 19,col=mycolor)
-abline(v=c(3,10), col= c("red","blue"))
-legend("topleft", legend=c("signific", "Nosign"),
-       col=c("red", "blue"), lty = 1:2)
+n = 1
+data.frame(Date = seq(ymd("2020-03-14"), 
+                        ymd("2020-04-04"), 
+                            by = "days"),
+           Beta = matrix(sur.slm_lag11$coefficients,ncol = 22)[n,],
+           tvalue = matrix(sur.slm_lag11$coefficients/sur.slm_lag11$rest.se,ncol = 22)[n,]) %>%
+  mutate(sig = ifelse(abs(tvalue) > 1.64, "Significant at 5%", "Not Significant at 5%")) %>%
+  ggplot(aes(x = Date, y = Beta, color = sig)) +
+  geom_point(size = 2) +
+  scale_color_manual(values = c("Significant at 5%" = "red", "Not Significant at 5%" = "blue")) +
+  geom_hline(yintercept = 0) +
+  geom_vline(xintercept = as_date("2020-03-16"), color = "red") +
+  theme_tufte()
 ```
-
-# ESTIMAR SUR ESPACIAL CON COEFICIENTES COSTANTES
-
-formula <- log(Inc) ~ log(HM) + log(EM) + log(TMedmm) + log(Sunmm+.1) + log(Hummm)
-
-coef_rest = 5
-R2 <- matrix(0,nrow = 21*coef_rest,ncol = 6*22)
-for (i in 1:21){
-R2[i,2] <- 1
-R2[i,(2+i*6)] <- -1
-R2[i+21,3] <- 1
-R2[i+21,(3+i*6)] <- -1
-R2[i+21*2,4] <- 1
-R2[i+21*2,(4+i*6)] <- -1
-R2[i+21*3,5] <- 1
-R2[i+21*3,(5+i*6)] <- -1
-R2[i+21*4,6] <- 1
-R2[i+21*4,(6+i*6)] <- -1
-
-# R2[2,2] <- 1
-# R2[2,(2+2*6)] <- -1
-# R2[3,2] <- 1
-# R2[3,(2+3*6)] <- -1
-}
-b2 <- matrix(0, ncol=21*coef_rest)
-
-panel.sur.slm <- spsurtime(formula = formula, data=GPanel, time = GPanel$time, R=R2, b=b2, type = "sim")
-summary(panel.sur.slm)
