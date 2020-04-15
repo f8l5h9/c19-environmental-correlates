@@ -270,6 +270,7 @@ model.sur.slm <- spsur::spsurtime(formula = formula, data=GPanel, time = GPanel$
 summary(model.sur.slm)
 ```
 
+
 ## Dinámica temporal de la dependencia espacial (Coef lambda estimado en las T=22 ecuaciones)
 
 ```{r}
@@ -406,28 +407,47 @@ legend("topleft", legend=c("signific", "Nosign"),
 
 # ESTIMAR SUR ESPACIAL CON COEFICIENTES COSTANTES
 
-formula <- log(Inc) ~ log(HM) + log(EM) + log(TMedmm) + log(Sunmm+.1) + log(Hummm)
+```{r}
+num.coef.rest = 2 # Número de coefcientes que se restringe
 
-coef_rest = 5
-R2 <- matrix(0,nrow = 21*coef_rest,ncol = 6*22)
+R2 <- matrix(0,nrow = 21*num.coef.rest,ncol = 6*22)
 for (i in 1:21){
 R2[i,2] <- 1
 R2[i,(2+i*6)] <- -1
+
 R2[i+21,3] <- 1
 R2[i+21,(3+i*6)] <- -1
-R2[i+21*2,4] <- 1
-R2[i+21*2,(4+i*6)] <- -1
-R2[i+21*3,5] <- 1
-R2[i+21*3,(5+i*6)] <- -1
-R2[i+21*4,6] <- 1
-R2[i+21*4,(6+i*6)] <- -1
+# R2[i+21*2,4] <- 1
+# R2[i+21*2,(4+i*6)] <- -1
+# R2[i+21*3,5] <- 1
+# R2[i+21*3,(5+i*6)] <- -1
+# R2[i+21*4,6] <- 1
+# R2[i+21*4,(6+i*6)] <- -1
 
 # R2[2,2] <- 1
 # R2[2,(2+2*6)] <- -1
 # R2[3,2] <- 1
 # R2[3,(2+3*6)] <- -1
 }
-b2 <- matrix(0, ncol=21*coef_rest)
+b2 <- matrix(c(0,0), ncol=21*num.coef.rest)
+```
 
-panel.sur.slm <- spsurtime(formula = formula, data=GPanel, time = GPanel$time, R=R2, b=b2, type = "sim")
-summary(panel.sur.slm)
+# Contraste de igualdad de coeficientes
+
+```{r}
+wald_betas(model.sur.slm, R = R2, b = b2)
+```
+
+
+
+```{r}
+formula <- log(Inc) ~ log(HM) + log(EM) + log(TMedmm) + log(Sunmm+.1) + log(Hummm)
+model.sur.slm <- spsur::spsurtime(formula = formula, data=GPanel, R=R2, b=b2, time = GPanel$time, type = "slm",fit_method = "3sls",listw=listw)
+summary(model.sur.slm)
+```
+
+```{r}
+panel.sur.sim <- spsurtime(formula = formula, data=GPanel, time = GPanel$time, R=R2, b=b2, type = "sim")
+summary(panel.sur.sim)
+```
+

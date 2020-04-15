@@ -82,6 +82,9 @@ for (i in 1:50){
 Hum <- matrix(0,nrow = 50, ncol = 35)
 Hum <- weathermetrics::dewpoint.to.humidity(t = TMax, dp = TMin,temperature.metric = 'celsius')
 
+Hum <- read.table("COVID-19-Humedad-Spain.csv",sep=";",header = TRUE)
+Hum <- Hum[,3:37]
+
 TMed <- as.data.frame(TMed)
 TMax <- as.data.frame(TMax)
 TMin <- as.data.frame(TMin)
