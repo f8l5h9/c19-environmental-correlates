@@ -27,6 +27,8 @@ NULL
 #'   \item{Older}{Percentage of population 65 and older in the provice in 2020}
 #'   \item{Median_Age}{Median age of population in the province in 2020}
 #'   \item{Male2Female}{Ratio of male to female population in the province in 2020}
+#'   \item{GDPpc}{GDP per capita in the province in 2016}
+#'   \item{Transit}{Dummy variable for mass transit system in province; 1: YES}
 #'   \item{Area}{Area of the province}
 #'   \item{Altitude}{Altitude of the province}
 #'   \item{Coast}{A dummy variable that indicates whether the province is in the coast; 1: YES}

@@ -1,6 +1,6 @@
 ---
 title: "COVID-19-Spain-Analysis"
-author: "F.A. Lopez and A. Paez"
+author: "F.A. Lopez, A. Paez, Tatiane Menezes de Almeida"
 date: "4/11/2020"
 output:
   pdf_document: default
@@ -21,6 +21,7 @@ library(sf)
 library(spdep)
 library(spsur)
 library(tidyverse)
+library(units)
 #library(spatialreg)
 #library(systemfit)
 #library(plm)
@@ -39,18 +40,63 @@ covid19_spain %>%
   summary()
 ```
 
-The dataframe is a simple features object with information at the level of the province. The dataframe includes information about the province, including its Autonomous Community (a superior jurisdiction), an identifier, dates, COVID-19 cases and incidence. The period covered is from March 14, 2020 to April 4, 2020. In addition there are some demographic controls, and various climatic variables. Of interest are the lagged variables. The lagged variables are 8-day moving averages calculated using date-minus-12-days to date-minus-5-days, to account for the latency of the infection. More information about the dataset can be obtained by typing `?covid18_spain`.
+The dataframe is a simple features object with information at the level of the province. The dataframe includes information about the province, including its Autonomous Community (a superior jurisdiction), an identifier, dates, COVID-19 cases and incidence. The period covered is from March 13, 2020 to April 11, 2020. In addition there are some demographic controls, and various climatic variables. Of interest are the lagged variables. The lagged variables are 8-day moving averages calculated using date-minus-12-days to date-minus-5-days, to account for the latency of the infection. More information about the dataset can be obtained by typing `?covid18_spain`.
 
 There are 50 provinces in Spain:
 ```{r}
 nlevels(covid19_spain$province)
 ```
 
-Shelter in place order in Spain went into effect on March 16, 2020. March 14 is the first day that every province had at least one reported case of COVID-19.
+The dataset covers 30 days:
+```{r}
+T <- max(covid19_spain$Date) - min(covid19_spain$Date) + 1 # To include the starting day
+T
+```
 
-## Data visualization
+The order to shelter in place in Spain went into effect on March 16, 2020. March 13 is the first day that every province had at least one reported case of COVID-19.
 
-There are 22 days in the dataset. We can summarize the incidence by week (excluding Canarias):
+Calculate population density and convert GDP per capita to thousands of euros:
+```{r}
+covid19_spain <- covid19_spain %>%
+  mutate(GDPpc = GDPpc/1000,
+         Density = Population/units::set_units(st_area(covid19_spain), km^2))
+```
+
+## Data exploration
+
+Correlation analysis with Incidence:
+```{r}
+covid19_spain %>% 
+  st_drop_geometry() %>%
+  group_by(Date) %>%
+  summarize(correlation_age = cor(Median_Age, Incidence),
+            correlation_older = cor(Older, Incidence),
+            correlation_m2f = cor(Male2Female, Incidence),
+            correlation_density = cor(Density, Incidence),
+            correlation_gdppc = cor(GDPpc, Incidence),
+            correlation_humidity = cor(Humidity_lag11, Incidence),
+            correlation_temp = cor(Mean_Temp_lag11, Incidence),
+            correlation_sunshine = cor(Sunshine_Hours_lag11, Incidence)) %>%
+  summary()
+```
+
+Correlation analysis with Incidence (log-transformed variables):
+```{r}
+covid19_spain %>% 
+  st_drop_geometry() %>%
+  group_by(Date) %>%
+  summarize(correlation_age = cor(log(Median_Age), log(Incidence)),
+            correlation_older = cor(log(Older), log(Incidence)),
+            correlation_m2f = cor(log(Male2Female), log(Incidence)),
+            correlation_density = cor(log(Density), log(Incidence)),
+            correlation_gdppc = cor(log(GDPpc), log(Incidence)),
+            correlation_humidity = cor(log(Humidity_lag11), log(Incidence)),
+            correlation_temp = cor(log(Mean_Temp_lag11), log(Incidence)),
+            correlation_sunshine = cor(log(Sunshine_Hours_lag11 + 0.1), log(Incidence))) %>%
+  summary()
+```
+
+There are 30 days in the dataset. We can summarize the incidence by week (excluding Canarias):
 ```{r}
 week11.plot <- covid19_spain %>% 
   filter(CCAA != "Canarias") %>%
@@ -115,10 +161,10 @@ week14.plot <- covid19_spain %>%
 grid.arrange(week11.plot, week12.plot, week13.plot, week14.plot, nrow = 2)
 ```
 
-We consider two control variables: ratio of male to female in the province, and median age of the population:
+We consider some control variables: ratio of male to female in the province, median age of the population, population density:
 ```{r}
 covid19_spain %>% 
-  filter(CCAA != "Canarias") %>%
+  filter(CCAA != "Canarias", Date == "2020-03-13") %>%
   ggplot() +
   geom_sf(aes(fill = Male2Female)) +
   scale_fill_distiller(name = "Male to Female Ratio", 
@@ -129,9 +175,10 @@ covid19_spain %>%
         legend.position = "bottom")
 ```
 
+Median age of the population:
 ```{r}
 covid19_spain %>% 
-  filter(CCAA != "Canarias") %>%
+  filter(CCAA != "Canarias", Date == "2020-03-13") %>%
   ggplot() +
   geom_sf(aes(fill = Median_Age)) +
   scale_fill_distiller(name = "Median Age of Population", 
@@ -142,11 +189,39 @@ covid19_spain %>%
         legend.position = "bottom")
 ```
 
-We are also interested in the climatic variables. The following plot is the distribution of temperature by CCAA:
+Population density:
+```{r}
+covid19_spain %>% 
+  filter(CCAA != "Canarias", Date == "2020-03-13") %>%
+  ggplot() +
+  geom_sf(aes(fill = as.numeric(Density))) +
+  scale_fill_distiller(name = "Population Density", 
+                       palette = "Blues", 
+                       direction = 1) +
+  theme_tufte() +
+  theme(axis.text = element_blank(),
+        legend.position = "bottom")
+```
+
+Older people:
+```{r}
+covid19_spain %>% 
+  filter(CCAA != "Canarias", Date == "2020-03-13") %>%
+  ggplot() +
+  geom_sf(aes(fill = as.numeric(Older))) +
+  scale_fill_distiller(name = "Percentage of older adults", 
+                       palette = "Blues", 
+                       direction = 1) +
+  theme_tufte() +
+  theme(axis.text = element_blank(),
+        legend.position = "bottom")
+```
+
+We are also interested in the climatic variables. To visualize the distribution of temperature by CCAA, we want to sort the communities by latitude, from north to south:
 ```{r}
 # Autonomous communities
 ccaa.sf <- covid19_spain %>% 
-  filter(Date == "2020-03-14") %>% 
+  filter(Date == "2020-03-13") %>% 
   group_by(CCAA) %>% 
   summarize(provinces = n())
 
@@ -169,7 +244,10 @@ ccaa.levels <- as.character(ccaa.levels$CCAA)
 # Relevel autonomous communities
 covid19_spain <- covid19_spain %>%
   mutate(CCAA = factor(CCAA, levels = ccaa.levels, ordered = TRUE))
+```
 
+The following plot is the distribution of temperature by CCAA, sorted by latitude:
+```{r}
 # Boxplots of temperatures
 covid19_spain %>% 
   st_drop_geometry() %>%
@@ -213,90 +291,123 @@ covid19_spain %>%
 ```{r}
 # Definicion del panel para plm
 GPanel <- plm::pdata.frame(covid19_spain %>% 
-                              st_drop_geometry() %>%
-                              select(province, 
-                                     Date,
-                                     Incidence, 
-                                     Median_Age,
-                                     Male2Female,
-                                     Mean_Temp_lag8,
-                                     Humidity_lag8,
-                                     Sunshine_Hours_lag8,
-                                     Mean_Temp_lag11,
-                                     Humidity_lag11,
-                                     Sunshine_Hours_lag11,
-                                     Mean_Temp_lag11w,
-                                     Humidity_lag11w,
-                                     Sunshine_Hours_lag11w),
-                            c("province","Date"))
+                             st_drop_geometry() %>%
+                             select(province, 
+                                    Date,
+                                    Incidence, 
+                                    Median_Age,
+                                    Male2Female,
+                                    Older,
+                                    GDPpc,
+                                    Density,
+                                    Transit,
+                                    Mean_Temp_lag8,
+                                    Humidity_lag8,
+                                    Sunshine_Hours_lag8,
+                                    Mean_Temp_lag11,
+                                    Humidity_lag11,
+                                    Sunshine_Hours_lag11,
+                                    Mean_Temp_lag11w,
+                                    Humidity_lag11w,
+                                    Sunshine_Hours_lag11w),
+                           c("province","Date"))
 
 ```
 
-# Modelo SUR espacial
+### Spatial SUR model
 
-Construcción de W
-
+Create connectivity matrix:
 ```{r}
-# Definición matrix de contactos 
-Wmat <- covid19_spain %>% 
-  filter(Date == "2020-03-14") %>%
+# Extract provinces
+provinces <- covid19_spain %>% 
+  filter(Date == "2020-03-13") %>%
+  select(province, CCAA, ID_INE)
+
+# Spatial weights matrix: 
+Wmat <- provinces %>%
   as("Spatial") %>%
   poly2nb(queen = FALSE) %>%
-  nb2mat(zero.policy = T)
+  nb2mat(zero.policy = TRUE)
 
 Wmat <- (Wmat > 0) * 1
 
-#W <- poly2nb(as(provincias.sf, "Spatial"), queen = FALSE)
-#Wmat <- nb2mat(W,zero.policy = T)
-#Wmat <- (Wmat>0)*1
-# Conexión de las dos provincias que forman Canarias
-Wmat[37, 44] <- 1
-Wmat[44, 37] <- 1
+# Join the two provinces in Canarias
+Wmat[which(provinces$province == "Palmas(Las)"), which(provinces$province == "Santa Cruz de Tenerife")] <- 1
+Wmat[which(provinces$province == "Santa Cruz de Tenerife"), which(provinces$province == "Palmas(Las)")] <- 1
+
 # 'Paises Catalans'
-n = 8
-Wmat[9,n] <- 1
-Wmat[n,9] <- 1
-Wmat[n,47] <- 1
-Wmat[47,n] <- 1
-Wmat[n,43] <- 1
-Wmat[43,n] <- 1
+#n = 8
+Wmat[which(provinces$province == "Barcelona"), which(provinces$province == "Baleares")] <- 1
+Wmat[which(provinces$province == "Baleares"), which(provinces$province == "Barcelona")] <- 1
+Wmat[which(provinces$province == "Baleares"), which(provinces$province == "Castellon/Castello")] <- 1 
+Wmat[which(provinces$province == "Castellon/Castello"), which(provinces$province == "Baleares")] <- 1
+Wmat[which(provinces$province == "Baleares"), which(provinces$province == "Tarragona")] <- 1 
+Wmat[which(provinces$province == "Tarragona"), which(provinces$province == "Baleares")] <- 1
 miW <- Wmat/rowSums(Wmat)
+
+# Convert to listw
 listw <- mat2listw(Wmat,style = "W")
 ```
 
-Se incluyen dos variables de control para recoger la herogeneidad espacial
-* HM: ratio Hombres/Mujeres (signo esperado +)
-* EM: Edad media (signo esperado +)
-
-Define formulas with two different lagged variables:
+Define formulas with three different lagged variables:
 ```{r}
 formula_lag8 <- log(Incidence) ~ log(Male2Female) + 
   log(Median_Age) + 
-  log(Mean_Temp_lag8) + 
-  log(Sunshine_Hours_lag8 + 0.1) + 
-  log(Humidity_lag8)
+  #log(Older) +
+  log(Density) +
+  Transit +
+  log(Humidity_lag8) +
+  log(Mean_Temp_lag8)
 
 formula_lag11 <- log(Incidence) ~ log(Male2Female) + 
   log(Median_Age) + 
-  log(Mean_Temp_lag11) + 
-  log(Sunshine_Hours_lag11 + 0.1) + 
-  log(Humidity_lag11)
+  #log(Older) +
+  log(Density) +
+  Transit +
+  log(Humidity_lag11) +
+  log(Mean_Temp_lag11) 
 
 formula_lag11w <- log(Incidence) ~ log(Male2Female) + 
   log(Median_Age) + 
-  log(Mean_Temp_lag11w) + 
-  log(Sunshine_Hours_lag11w + 0.1) + 
-  log(Humidity_lag11w)
+  #log(Older) +
+  log(Density) +
+  Transit +
+  log(Humidity_lag11w) +
+  log(Mean_Temp_lag11w)
 ```
 
-Model with 8-day moving average of climatic variables:
+Create the terms needed to impose restrictions to the parameters for estimation. In this case we will restrict the two demographic variables and let Density, Transit, and the climatic variables to vary across equations. The rationale is that age and ratio of male to female do not change in the short period of time examined; on the other hand, while density and the presence of transit systems are also constants over the period examined, the behavior changed as a consequence of the lockdown: we expect these variables to be significant early on in the evolution of the pandemic, and become non-significant as the lockdown reduces their importance for the transmission of the virus.
+```{r}
+# Recall that T is the number of days, i.e., time periods, i.e., equations
+k <- 7 # Number of independent variables, including the constant
+coef_rest <- 2 # Number of restrictions
+
+# nrow is number of equations (time periods) minus 1, times the number of restrictions
+# ncol is number of variables times number of equations
+R2 <- matrix(0, nrow = (T - 1) * coef_rest, ncol = k * T)
+
+for (i in 1:(T-1)){
+  R2[i, 2] <- 1
+  R2[i, (2 + i * k)] <- -1
+  R2[(i + T - 1), 3] <- 1
+  R2[(i + T - 1), (3 + i * k)] <- -1
+  # Use if more restrictions are needed
+  #R2[(i + T - 1) * 2, 4] <- 1
+  #R2[(i + T - 1) * 2, (4 + i * k)] <- -1
+}
+b2 <- matrix(0, ncol = 21*coef_rest)
+```
+
+Model with a lagged 8-day moving average of climatic variables:
 ```{r}
 sur.slm_lag8 <- spsur::spsurtime(formula = formula_lag8, 
-                                  data=GPanel, 
-                                  time = GPanel$Date, 
-                                  type = "slm", 
-                                  fit_method = "3sls", 
-                                  listw=  listw)
+                                 data=GPanel, 
+                                 time = GPanel$Date, 
+                                 type = "slm", 
+                                 fit_method = "3sls", 
+                                 listw=  listw,
+                                 R = R2,
+                                 b = b2)
 summary(sur.slm_lag8)
 ```
 
@@ -307,18 +418,22 @@ sur.slm_lag11 <- spsur::spsurtime(formula = formula_lag11,
                                   time = GPanel$Date, 
                                   type = "slm", 
                                   fit_method = "3sls", 
-                                  listw=  listw)
+                                  listw=  listw,
+                                 R = R2,
+                                 b = b2)
 summary(sur.slm_lag11)
 ```
 
 Model with 11-day weighted moving average of climatic variables:
 ```{r}
 sur.slm_lag11w <- spsur::spsurtime(formula = formula_lag11w, 
-                                  data=GPanel, 
-                                  time = GPanel$Date, 
-                                  type = "slm", 
-                                  fit_method = "3sls", 
-                                  listw=  listw)
+                                   data=GPanel, 
+                                   time = GPanel$Date, 
+                                   type = "slm", 
+                                   fit_method = "3sls", 
+                                   listw=  listw,
+                                 R = R2,
+                                 b = b2)
 summary(sur.slm_lag11w)
 ```
 
@@ -329,9 +444,9 @@ data.frame(R2_lag8 = sur.slm_lag8$R2,
            R2_lag11w = sur.slm_lag11w$R2) %>%
   slice(2:n()) %>%
   rownames_to_column(var = "Equation") %>%
-  mutate(Date = seq(ymd("2020-03-14"), 
-                        ymd("2020-04-04"), 
-                            by = "days")) %>%
+  mutate(Date = seq(ymd("2020-03-13"), 
+                    ymd("2020-04-11"), 
+                    by = "days")) %>%
   pivot_longer(cols = starts_with("R"), names_to = "Model", values_to = "R2") %>%
   ggplot(aes(x = Date, y = R2, color = Model, shape = Model)) +
   geom_point(size = 2) +
@@ -340,14 +455,15 @@ data.frame(R2_lag8 = sur.slm_lag8$R2,
 
 ```
 
-## Dinámica temporal de la dependencia espacial (Coef lambda estimado en las T=22 ecuaciones)
+## Spatial evolution of spatial residual autocorrelation
 
+Plot the evolution of the spatial autocorrelation parameter:
 ```{r}
-data.frame(Date = seq(ymd("2020-03-14"), 
-                        ymd("2020-04-04"), 
-                            by = "days"),
-           Deltas = sur.slm_lag11w$deltas,
-           tvalue = sur.slm_lag11w$deltas/sur.slm_lag11$deltas.se) %>%
+data.frame(Date = seq(ymd("2020-03-13"), 
+                      ymd("2020-04-11"), 
+                      by = "days"),
+           Deltas = sur.slm_lag11$deltas,
+           tvalue = sur.slm_lag11$deltas/sur.slm_lag11$deltas.se) %>%
   mutate(sig = ifelse(abs(tvalue) > 1.64, "Significant at 5%", "Not Significant at 5%")) %>%
   ggplot(aes(x = Date, y = Deltas, color = sig)) +
   geom_point(size = 2) +
@@ -357,99 +473,106 @@ data.frame(Date = seq(ymd("2020-03-14"),
   theme_tufte()
 ```
 
-* La estructura de dependencia espacial, pasa de positiva (significativa) a no significativa para finalmente ser negativa (significativa)
-* Esto puede explicarse:
-- en una PRIMERA ETAPA al inicio del brote epidémico había contagio entre provincias colindantes.
-- en una SEGUNDA ETAPA Al introducir medidas de confinamiento las provincias quedaron 'aisladas' y cada una creció a un ritmo diferente. La estructura de dependencia espacial se 'disolvió'
--  en una TERCERA ETAPA, en muchas provincias se controló parcialmente la epidemia. Salvo en X-provincias que siguieron creciendo fuertemente. Eso dio lugar a patrones de dependencia espacial negativa.
-
 # Analisis of autocorrelated residuals
 
-Extract residuals for March 14 and April 2, and compute autocorrelated residuals:
+Identify all equations with significant autocorrelation parameters:
 ```{r}
-residuals_Mar14 <- as.matrix(residuals(sur.slm_lag11w))[[1]]
-residuals_Mar14 <- lag.listw(listw, residuals_Mar14)
-
-residuals_Apr04 <- as.matrix(residuals(sur.slm_lag11w))[[22]]
-residuals_Apr04 <- lag.listw(listw, residuals_Apr04)
+deltas.sig <- data.frame(Date = seq(ymd("2020-03-13"), 
+                      ymd("2020-04-11"), 
+                      by = "days"),
+           Deltas = sur.slm_lag11$deltas,
+           tvalue = sur.slm_lag11$deltas/sur.slm_lag11$deltas.se) %>%
+  mutate(sig = abs(tvalue) > 1.64)
 ```
 
-Plot residuals on March 14 (positive autocorrelation):
+Extract all residuals and calculate the spatially autocorrelated residuals:
 ```{r}
-covid19_spain %>% filter(Date == "2020-03-14") %>% 
-  mutate(ResMarch14 = residuals_Mar14) %>% 
+all_residuals <- data.frame(matrix(unlist(residuals(sur.slm_lag11)),
+                                   ncol = length(residuals(sur.slm_lag11)), 
+                                   byrow = FALSE))
+
+# Spatially lagged residuals
+for(i in 1:n){
+  all_residuals[,i] <- deltas.sig$Deltas[i] * lag.listw(listw, all_residuals[,i])
+}
+
+# Pivot table
+all_residuals <- all_residuals %>% 
+  pivot_longer(everything(), 
+               names_to = "Date", 
+               values_to = "Spatially_Autocorrelated_Residuals")%>%
+  mutate(Date = rep(seq(dmy("13-03-2020"), 
+                        dmy("11-04-2020"), 
+                        by = "days"), 
+                    50),
+         ID_INE = rep(provinces$ID_INE, 
+                    each = 30))
+```
+
+Join to `covid19_spain`:
+```{r}
+covid19_spain <- covid19_spain %>%
+  left_join(all_residuals, by = c("Date", "ID_INE"))
+```
+
+Plot residuals on March 13 (positive autocorrelation):
+```{r}
+covid19_spain %>% filter(Date == "2020-03-13") %>% 
   filter(CCAA != "Canarias") %>%
   ggplot() +
-  geom_sf(aes(fill = ResMarch14)) +
-  scale_fill_distiller(palette = "RdBu", direction = 1) +
-  theme_tufte()
+  geom_sf(aes(fill = Spatially_Autocorrelated_Residuals)) +
+  scale_fill_distiller(name = "Autocorrelated Residuals", palette = "RdBu", direction = 1) +
+  theme_tufte() + 
+  theme(legend.position = "bottom")
 ```
 
-Plot residuals on April 4:
+Plot residuals on March 24 (positive autocorrelation):
 ```{r}
-covid19_spain %>% filter(Date == "2020-03-14") %>% 
-  mutate(ResApr04 = residuals_Apr04) %>% 
+covid19_spain %>% filter(Date == "2020-03-24") %>% 
   filter(CCAA != "Canarias") %>%
   ggplot() +
-  geom_sf(aes(fill = ResApr04)) +
-  scale_fill_distiller(palette = "RdBu", direction = 1) +
-  theme_tufte()
+  geom_sf(aes(fill = Spatially_Autocorrelated_Residuals)) +
+  scale_fill_distiller(name = "Autocorrelated Residuals", palette = "RdBu", direction = 1) +
+  theme_tufte() + 
+  theme(legend.position = "bottom")
 ```
 
-## Temporal variation of coefficients of control variables
-
-### Male to Female Ratio
-
-* No es significativa
+Plot residuals on April 11:
 ```{r}
-n = 2
-data.frame(Date = seq(ymd("2020-03-14"), 
-                        ymd("2020-04-04"), 
-                            by = "days"),
-           Beta = matrix(sur.slm_lag11w$coefficients,ncol = 22)[n,],
-           tvalue = matrix(sur.slm_lag11w$coefficients/sur.slm_lag11w$rest.se,ncol = 22)[n,]) %>%
-  mutate(sig = ifelse(abs(tvalue) > 1.64, "Significant at 5%", "Not Significant at 5%")) %>%
-  ggplot(aes(x = Date, y = Beta, color = sig)) +
-  geom_point(size = 2) +
-  scale_color_manual(values = c("Significant at 5%" = "red", "Not Significant at 5%" = "blue")) +
-  geom_hline(yintercept = 0) +
-  geom_vline(xintercept = as_date("2020-03-16"), color = "red") +
-  theme_tufte()
+covid19_spain %>% filter(Date == "2020-04-11") %>% 
+  filter(CCAA != "Canarias") %>%
+  ggplot() +
+  geom_sf(aes(fill = Spatially_Autocorrelated_Residuals)) +
+  scale_fill_distiller(name = "Autocorrelated Residuals", palette = "RdBu", direction = 1) +
+  theme_tufte() + 
+  theme(legend.position = "bottom")
 ```
 
-### Median Age
-
-* Los coeficientes de las variables de control (EM y HM) tienen el signo esperado
-* Los primeros días tienen valores elevados cuando la pandemía no estaba controlada (aún no había confinamiento)
+Are these spatially autocorrelated residuals correlated with any other potential control variables? Check the correlations:
 ```{r}
-n = 3
-data.frame(Date = seq(ymd("2020-03-14"), 
-                        ymd("2020-04-04"), 
-                            by = "days"),
-           Beta = matrix(sur.slm_lag11w$coefficients,ncol = 22)[n,],
-           tvalue = matrix(sur.slm_lag11w$coefficients/sur.slm_lag11w$rest.se,ncol = 22)[n,]) %>%
-  mutate(sig = ifelse(abs(tvalue) > 1.64, "Significant at 5%", "Not Significant at 5%")) %>%
-  ggplot(aes(x = Date, y = Beta, color = sig)) +
-  geom_point(size = 2) +
-  scale_color_manual(values = c("Significant at 5%" = "red", "Not Significant at 5%" = "blue")) +
-  geom_hline(yintercept = 0) +
-  geom_vline(xintercept = as_date("2020-03-16"), color = "red") +
-  theme_tufte()
+covid19_spain %>% 
+  st_drop_geometry() %>%
+  group_by(Date) %>%
+  summarize(correlation_gdppc = cor(GDPpc, Spatially_Autocorrelated_Residuals),
+            correlation_older = cor(Older, Spatially_Autocorrelated_Residuals),
+            correlation_sunshine = cor(Sunshine_Hours_lag11, Spatially_Autocorrelated_Residuals)) %>%
+  summary()
 ```
 
-## Dinámica temporal de Variables Climáticas
+These two variables are only weakly and inconsistently correlated with the residuals.
 
-### TEMPERATURA
 
-* Los coeficientes de las variables de control (EM y HM) tienen el signo esperado
-* Los primeros días tienen valores elevados cuando la pandemía no estaba controlada (aún no había confinamiento)
+
+## Temporal variation of coefficients of climatic variables
+
+Humidity:
 ```{r}
 n = 4
-data.frame(Date = seq(ymd("2020-03-14"), 
-                        ymd("2020-04-04"), 
-                            by = "days"),
-           Beta = matrix(sur.slm_lag11w$coefficients,ncol = 22)[n,],
-           tvalue = matrix(sur.slm_lag11w$coefficients/sur.slm_lag11$rest.se,ncol = 22)[n,]) %>%
+data.frame(Date = seq(ymd("2020-03-13"), 
+                      ymd("2020-04-11"), 
+                      by = "days"),
+           Beta = matrix(sur.slm_lag11$coefficients[-c(2,3)],ncol = T)[n,],
+           tvalue = matrix(sur.slm_lag11$coefficients[-c(2,3)]/sur.slm_lag11$rest.se[-c(2,3)], ncol = T)[n,]) %>%
   mutate(sig = ifelse(abs(tvalue) > 1.64, "Significant at 5%", "Not Significant at 5%")) %>%
   ggplot(aes(x = Date, y = Beta, color = sig)) +
   geom_point(size = 2) +
@@ -459,15 +582,14 @@ data.frame(Date = seq(ymd("2020-03-14"),
   theme_tufte()
 ```
 
-### Hours of sunshine
-
+Temperature:
 ```{r}
 n = 5
-data.frame(Date = seq(ymd("2020-03-14"), 
-                        ymd("2020-04-04"), 
-                            by = "days"),
-           Beta = matrix(sur.slm_lag11w$coefficients,ncol = 22)[n,],
-           tvalue = matrix(sur.slm_lag11w$coefficients/sur.slm_lag11w$rest.se,ncol = 22)[n,]) %>%
+data.frame(Date = seq(ymd("2020-03-13"), 
+                      ymd("2020-04-11"), 
+                      by = "days"),
+           Beta = matrix(sur.slm_lag11$coefficients[-c(2,3)],ncol = T)[n,],
+           tvalue = matrix(sur.slm_lag11$coefficients[-c(2,3)]/sur.slm_lag11$rest.se[-c(2,3)], ncol = T)[n,]) %>%
   mutate(sig = ifelse(abs(tvalue) > 1.64, "Significant at 5%", "Not Significant at 5%")) %>%
   ggplot(aes(x = Date, y = Beta, color = sig)) +
   geom_point(size = 2) +
@@ -477,33 +599,20 @@ data.frame(Date = seq(ymd("2020-03-14"),
   theme_tufte()
 ```
 
-### Humidity
-
+Boxplot of temperatures by date
 ```{r}
-n = 6
-data.frame(Date = seq(ymd("2020-03-14"), 
-                        ymd("2020-04-04"), 
-                            by = "days"),
-           Beta = matrix(sur.slm_lag11w$coefficients,ncol = 22)[n,],
-           tvalue = matrix(sur.slm_lag11w$coefficients/sur.slm_lag11w$rest.se,ncol = 22)[n,]) %>%
-  mutate(sig = ifelse(abs(tvalue) > 1.64, "Significant at 5%", "Not Significant at 5%")) %>%
-  ggplot(aes(x = Date, y = Beta, color = sig)) +
-  geom_point(size = 2) +
-  scale_color_manual(values = c("Significant at 5%" = "red", "Not Significant at 5%" = "blue")) +
-  geom_hline(yintercept = 0) +
-  geom_vline(xintercept = as_date("2020-03-16"), color = "red") +
-  theme_tufte()
+ggplot(data = covid19_spain, aes(x = Date, y = Mean_Temp_lag11, group = Date)) +
+  geom_boxplot()
 ```
 
-### Intercept
-
+Intercept
 ```{r}
 n = 1
-data.frame(Date = seq(ymd("2020-03-14"), 
-                        ymd("2020-04-04"), 
-                            by = "days"),
-           Beta = matrix(sur.slm_lag11w$coefficients,ncol = 22)[n,],
-           tvalue = matrix(sur.slm_lag11w$coefficients/sur.slm_lag11w$rest.se,ncol = 22)[n,]) %>%
+data.frame(Date = seq(ymd("2020-03-13"), 
+                      ymd("2020-04-11"), 
+                      by = "days"),
+           Beta = matrix(sur.slm_lag11$coefficients[-c(2,3)],ncol = T)[n,],
+           tvalue = matrix(sur.slm_lag11$coefficients[-c(2,3)]/sur.slm_lag11$rest.se[-c(2,3)], ncol = T)[n,]) %>%
   mutate(sig = ifelse(abs(tvalue) > 1.64, "Significant at 5%", "Not Significant at 5%")) %>%
   ggplot(aes(x = Date, y = Beta, color = sig)) +
   geom_point(size = 2) +
