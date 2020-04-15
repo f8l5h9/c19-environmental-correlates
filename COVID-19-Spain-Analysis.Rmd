@@ -492,7 +492,7 @@ all_residuals <- data.frame(matrix(unlist(residuals(sur.slm_lag11)),
                                    byrow = FALSE))
 
 # Spatially lagged residuals
-for(i in 1:n){
+for(i in 1:ncol(all_residuals)){
   all_residuals[,i] <- deltas.sig$Deltas[i] * lag.listw(listw, all_residuals[,i])
 }
 
@@ -553,15 +553,13 @@ Are these spatially autocorrelated residuals correlated with any other potential
 covid19_spain %>% 
   st_drop_geometry() %>%
   group_by(Date) %>%
-  summarize(correlation_gdppc = cor(GDPpc, Spatially_Autocorrelated_Residuals),
-            correlation_older = cor(Older, Spatially_Autocorrelated_Residuals),
-            correlation_sunshine = cor(Sunshine_Hours_lag11, Spatially_Autocorrelated_Residuals)) %>%
+  summarize(correlation_gdppc = cor(log(GDPpc), Spatially_Autocorrelated_Residuals),
+            correlation_older = cor(log(Older), Spatially_Autocorrelated_Residuals),
+            correlation_sunshine = cor(log(Sunshine_Hours_lag11 + 0.1), Spatially_Autocorrelated_Residuals)) %>%
   summary()
 ```
 
 These two variables are only weakly and inconsistently correlated with the residuals.
-
-
 
 ## Temporal variation of coefficients of climatic variables
 
