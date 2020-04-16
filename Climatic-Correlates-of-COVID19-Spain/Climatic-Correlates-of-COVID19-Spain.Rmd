@@ -56,9 +56,55 @@ Explain the sources of data and data preprocessing.
 Methods: Spatial SUR
 ===================
 
-Do not forget to plug-in a reference to the package for spatial sur.
+# The econometric model
+
+The baseline model propouse in this paper is a classical SUR model without spatial effects (from here, SUR-SIM). Following the classical expresion for thios model in stacked form
+
+\begin{equation}
+\begin{bmatrix}
+y_1 \\ y_2 \\ ... \\ y_T
+\end{bmatrix}
+=
+\begin{bmatrix}
+X_1 & 0 & ... & 0 \\ 0 & X_2 & ... & 0 \\ ... & ... & ... & ... \\ 0 & 0 & ... & X_T
+\end{bmatrix}
+\
+\begin{bmatrix}
+\beta_1 \\ \beta_1 \\ ... \\ \beta_T
+\end{bmatrix}
++
+\begin{bmatrix}
+\epsilon_1 \\ \epsilon_2 \\ ... \\ \epsilon_T
+\end{bmatrix}
+\label{eq:sur-sim}
+\end{equation}
+
+where $y_{t}=(y_{1t},...,y_{Nt})$ is the incidence ratio in the province $s$ ($s=1,...,N$) the day $t$ $(t=1,...,T)$; $X_t$ is a $N \times k_t$ matrix of the $k_t$ independen variables; $\beta_t=(\beta_{1t},...,\beta_{Nt})$ is a vector of coefficients and $\epsilon$ is the error vector. Like is characteristic in SUR model, we consider dependence among error vector $E[\epsilon_t \epsilon'_{t'}]=\sigma_{tt'}]$. Note that this especification is flexible allowing changes in the coefficients $\beta_{it}$ in order to modulate the effect of $X_it$ on $y_t$. This flexibility is not always diserable and is posible impose restrinctions and consider time constant some $\beta$ coefficients. In this case we can reformulate the coefficients expression of $\beta_t=(\beta_{1},...,\beta_{r},\beta_{r+1},...,\beta_{Nt})$ if we want to consider the first $r$ coefficients contanst.
+The equation @ref{eq:sur-sim} can be write in compact form,
+\begin{equation}
+y = X \beta + \epsilon
+\end{equation}
+where....
 
 
+Like in case of cross-section, it is possible identify spatial autocorrelation in the residuals of @ref{eq:sur-sim} and several tests has been develop to test the null of spatial independence (López Mur Herrera). In case of reject the null alternative specifications has been propose to include spatial effects (@Anselin1988, see also @Aselin2006). The taxonomy of spatial mod- els that we present in this paper is well known (see Elhorst 2014) and we extend in the SUR framework.
+
+The spatial lag SUR model (SUR-SLM) incorporates a spatial lag of the dependent variable as an explanatory factor.
+
+In this paper we consider the spatial lag model
+\begin{equation}
+\bf{A}y = X \beta + \epsilon \\
+\epsilon =N(0,\Omega)
+\label{eq:sur-slm}
+\end{equation}
+where A =$I_{TN}-\bf{\Lambda} \otimes W$ with $\bf{\Lambda} = diag(\lambda_1,...,\lambda_T)$.
+
+This model can be estimated by maximum likelihood (ref) or instrumental variables (ref). We considerer this methodology to estimate the model. 
+This specification assumes that inceidencein a province ($y_st$) is partially determined by the weighted average (Wy_st) of incidence in neighbouring provinces. Parameter $\lambda_t$ identifies the intensity and the sign of the impacts.
+The strategies of selection and comparison between these models are present in López et al. (2014)
+
+ 
+where $y_{t}=(y_{1t},...,y_{Nt})$ is the incidence ratio in the province $s$ ($s=1,...,N$) in day $t$ $(t=1,...,T)$, $X_{st}=(X^1_{st},...,X^k_{st})$ is a vector of k independent variables observed in (s,t). The model consider $\beta_t=(\beta^1_t,...,\beta^k_t)$ coefficients constant in $s$. The panel model enables correlation between residuals of explanatory models of each time period $t$, such that $E[\epsilon_t \epsilon'_{t'}]=\sigma_{tt'}]$
 Analysis and Results
 ===================
 
