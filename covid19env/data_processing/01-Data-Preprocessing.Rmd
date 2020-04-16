@@ -17,6 +17,7 @@ library(lubridate)
 library(readr)
 library(sf)
 library(tidyverse)
+library(units)
 #library(aemet)
 #library(spdep)
 #library(spsur)
@@ -102,16 +103,16 @@ population.sf <- st_read("Shp/Provincias.shp") %>%
 Join the tables and convert to simple features:
 ```{r}
 covid19_spain <- covid19_spain %>%
-  left_join(population.sf, 
-            by = "ID_INE") %>%
-  left_join(GDPpc, 
+  left_join(population.sf %>% 
+              select(ID_INE, POPULATION), 
             by = "ID_INE")
 ```
 
 Calculate the incidence of COVID-19 cases (cases 100,000 hab):
 ```{r}
 covid19_spain <- covid19_spain %>%
-  mutate(Incidence = Cases * 100000/POPULATION)
+  mutate(Incidence = Cases * 100000/POPULATION) %>%
+  select(-POPULATION)
 ```
 
 ## Read sf with provinces
@@ -120,7 +121,7 @@ covid19_spain <- covid19_spain %>%
 provinces_spain <- sf::st_read("Shp/shapefiles_provincias_espana.shp") #
 ```
 
-Rename columns in sf:
+Join provincial-level data to sf:
 ```{r}
 provinces_spain <- provinces_spain %>%
   transmute(ID_INE = cartodb_id, geometry) %>%
@@ -129,6 +130,10 @@ provinces_spain <- provinces_spain %>%
               select(province, 
                      CCAA, 
                      ID_INE),
+            by = "ID_INE") %>%
+  left_join(population.sf,
+            by = "ID_INE") %>%
+  left_join(GDPpc, 
             by = "ID_INE")
 ```
 
@@ -136,14 +141,13 @@ provinces_spain <- provinces_spain %>%
 
 Rename dataframe:
 ```{r}
-covid19_spain <- covid19_spain %>% 
+provinces_spain <- provinces_spain  %>%
+  mutate(Density = POPULATION/units::set_units(st_area(provinces_spain), km^2)) %>% 
   select(province, 
          CCAA,
          ID_INE,
-         Date,
-         Cases,
-         Incidence,
-         Population = POPULATION, 
+         Population = POPULATION,
+         Density,
          Older = MAY_65, 
          Median_Age = EDAD_MED, 
          Male2Female = HOM_MUJ,
@@ -152,7 +156,8 @@ covid19_spain <- covid19_spain %>%
          Altitude = ALTITUD,
          Coast = COSTA,
          Meteo_Station = ESTACION_M,
-         Area = AREA)
+         Area = AREA,
+         geometry)
 ```
 
 ## Lectura datos climáticos
@@ -572,10 +577,7 @@ summary(covid19_spain)
 
 Ratio of male to female in province:
 ```{r}
-ggplot(data = covid19_spain %>%
-         filter(Date == "2020-03-14") %>% 
-         left_join(provinces_spain, by = "ID_INE") %>% 
-         st_as_sf()) + 
+ggplot(data = provinces_spain) + 
   geom_sf(aes(fill = Male2Female)) + 
   scale_fill_distiller(palette = "Blues", direction = 1) + 
   theme_tufte()
@@ -583,10 +585,7 @@ ggplot(data = covid19_spain %>%
 
 Median age of population in province:
 ```{r}
-ggplot(data = covid19_spain %>%
-         filter(Date == "2020-03-14") %>% 
-         left_join(provinces_spain, by = "ID_INE") %>% 
-         st_as_sf()) + 
+ggplot(data = provinces_spain) + 
   geom_sf(aes(fill = Median_Age)) + 
   scale_fill_distiller(palette = "Blues", direction = 1) + 
   theme_tufte()
@@ -634,50 +633,24 @@ gridExtra::grid.arrange(p1, p2, p3, ncol = 3)
 
 ## Save data
 
-Sort variables:
+Filter missing records:
 ```{r}
 covid19_spain <- covid19_spain %>%
-  select(province,
-         CCAA,
-         ID_INE,
-         Date,
-         Cases,
-         Incidence,
-         Population,
-         Older,
-         Median_Age,
-         Male2Female,
-         GDPpc,
-         Transit,
-         Area,
-         Altitude,
-         Coast,
-         Meteo_Station,
-         Max_Temp,
-         Min_Temp,
-         Mean_Temp,
-         Mean_Temp_lag8,
-         Mean_Temp_lag11,
-         Mean_Temp_lag11w,
-         Sunshine_Hours,
-         Sunshine_Hours_lag8,
-         Sunshine_Hours_lag11,
-         Sunshine_Hours_lag11w,
-         Precipitation,
-         Precipitation_lag8,
-         Precipitation_lag11,
-         Precipitation_lag11w,
-         Humidity,
-         Humidity_lag8,
-         Humidity_lag11,
-         Humidity_lag11w) %>%
   filter(!is.na(province)) %>% # Remove records that are missing data on the province
   filter(!is.na(Max_Temp)) # Remove records that are missing climatic variables
+
+provinces_spain <- provinces_spain %>%
+  drop_na()
 ```
 
 Summary after cleaning:
 ```{r}
 summary(covid19_spain)
+```
+
+Summary after cleaning:
+```{r}
+summary(provinces_spain)
 ```
 
 Save:

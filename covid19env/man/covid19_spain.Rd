@@ -13,40 +13,28 @@ A dataframe with 1500 rows and 34 variables:
   \item{Date}{Date}
   \item{Cases}{Number of COVID-19 cases reported in the province by date}
   \item{Incidence}{Incidence of COVID-19 cases per 100,000 population in the province by date}
-  \item{Population}{Population in the province in 2020}
-  \item{Older}{Percentage of population 65 and older in the provice in 2020}
-  \item{Median_Age}{Median age of population in the province in 2020}
-  \item{Male2Female}{Ratio of male to female population in the province in 2020}
-  \item{GDPpc}{GDP per capita in the province in 2016}
-  \item{Transit}{Dummy variable for mass transit system in province; 1: YES}
-  \item{Area}{Area of the province}
-  \item{Altitude}{Altitude of the province}
-  \item{Coast}{A dummy variable that indicates whether the province is in the coast; 1: YES}
-  \item{Meteo_Station}{Identifier of meteorological station representative of the province used to retrieve climatic variables}
   \item{Max_Temp}{Maximum temperature registered by the meteorological station representative of the province in Celsius}
   \item{Min_Temp}{Minimum temperature registered by the meteorological station representative of the province in Celsius}
   \item{Mean_Temp}{Mean temperature registered by the meteorological station representative of the province in Celsius}
-  \item{Mean_Temp_lag8}{8-day average of the mean temperature, calculated using the values between date-minus-12-days and date-minus-5-days in Celsius}
-  \item{Mean_Temp_lag11}{11-day average of the mean temperature, calculated using the values between date-minus-12-days and date-minus-2-days in Celsius}
-  \item{Mean_Temp_lag11w}{Wegihted 11-day average of the mean temperature, calculated using the values between date-minus-12-days and date-minus-2-days in Celsius}
   \item{Sunshine_Hours}{Hours of sunshine registered by the meteorological station representative of the province in hours}
-  \item{Sunshine_Hours_lag8}{8-day average of sunshine hours, calculated using the values between date-minus-12-days and date-minus-5-days in hours}
-  \item{Sunshine_Hours_lag11}{11-day average of sunshine hours, calculated using the values between date-minus-12-days and date-minus-2-days in hours}
-  \item{Sunshine_Hours_lag11w}{Weighted 11-day average of sunshine hours, calculated using the values between date-minus-12-days and date-minus-2-days in hours}
   \item{Precipitation}{Precipitation registered by the meteorological station representative of the province}
-  \item{Precipitation_lag8}{8-day average of the precipitation, calculated using the values between date-minus-12-days and date-minus-5-days}
-  \item{Precipitation_lag11}{11-day average of the precipitation, calculated using the values between date-minus-12-days and date-minus-2-days}
-  \item{Precipitation_lag11w}{Weighted 11-day average of the precipitation, calculated using the values between date-minus-12-days and date-minus-2-days}
   \item{Humidity}{Calculated humidity}
+  \item{Mean_Temp_lag8}{8-day average of the mean temperature, calculated using the values between date-minus-12-days and date-minus-5-days in Celsius}
+  \item{Sunshine_Hours_lag8}{8-day average of sunshine hours, calculated using the values between date-minus-12-days and date-minus-5-days in hours}
+  \item{Precipitation_lag8}{8-day average of the precipitation, calculated using the values between date-minus-12-days and date-minus-5-days}
   \item{Humidity_lag8}{8-day average of the humidity, calculated using the values between date-minus-12-days and date-minus-5-days}
+  \item{Mean_Temp_lag11}{11-day average of the mean temperature, calculated using the values between date-minus-12-days and date-minus-2-days in Celsius}
+  \item{Sunshine_Hours_lag11}{11-day average of sunshine hours, calculated using the values between date-minus-12-days and date-minus-2-days in hours}
+  \item{Precipitation_lag11}{11-day average of the precipitation, calculated using the values between date-minus-12-days and date-minus-2-days}
   \item{Humidity_lag11}{11-day average of the humidity, calculated using the values between date-minus-12-days and date-minus-2-days}
+  \item{Mean_Temp_lag11w}{Wegihted 11-day average of the mean temperature, calculated using the values between date-minus-12-days and date-minus-2-days in Celsius}
+  \item{Sunshine_Hours_lag11w}{Weighted 11-day average of sunshine hours, calculated using the values between date-minus-12-days and date-minus-2-days in hours}
+  \item{Precipitation_lag11w}{Weighted 11-day average of the precipitation, calculated using the values between date-minus-12-days and date-minus-2-days}
   \item{Humidity_lag11w}{Weighted 11-day average of the humidity, calculated using the values between date-minus-12-days and date-minus-2-days}
   \item{geometry}{geometry of the simple features object}
 }
 }
 \source{
-Population and demographic data: Instituto Nacional de Estadistica http://www.ine.es/
-
 Climatic data: Agencia Estatal de Meteorologia http://www.aemet.es/
 
 COVID-19 data:

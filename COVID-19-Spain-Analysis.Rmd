@@ -57,21 +57,16 @@ The order to shelter in place in Spain went into effect on March 16, 2020. March
 
 Convert GDP per capita to thousands of euros:
 ```{r}
-covid19_spain <- covid19_spain %>%
+provinces_spain <- provinces_spain %>%
   mutate(GDPpc = GDPpc/1000)
 ```
 
-Calculate density variable and join to `covid19_spain`: 
+Join provincial data to incidence data and convert to simple features:
 ```{r}
-covid19_spain <- covid19_spain %>%
-  left_join(provinces_spain %>% 
-              left_join(covid19_spain %>% 
-                          filter(Date == "2020-03-14") %>%
-                          select(ID_INE, Population),
-                        by = "ID_INE") %>%
-              transmute(ID_INE, Density = Population/units::set_units(st_area(provinces_spain), km^2)) %>%
-              st_drop_geometry(),
-            by = "ID_INE")
+covid19_spain <- covid19_spain %>% 
+  left_join(provinces_spain,
+            by = c("province", "CCAA", "ID_INE")) %>%
+  st_as_sf()
 ```
 
 ## Data exploration
@@ -79,6 +74,7 @@ covid19_spain <- covid19_spain %>%
 Correlation analysis with Incidence:
 ```{r}
 covid19_spain %>% 
+  st_drop_geometry() %>% #drop geometry to avoid slowing the calculations
   group_by(Date) %>%
   summarize(correlation_age = cor(Median_Age, Incidence),
             correlation_older = cor(Older, Incidence),
@@ -96,6 +92,7 @@ The negative correlation of older people is interesting. Our initial idea was th
 Correlation analysis with Incidence (log-transformed variables):
 ```{r}
 covid19_spain %>% 
+  st_drop_geometry() %>% #drop geometry to avoid slowing the calculations
   group_by(Date) %>%
   summarize(correlation_age = cor(log(Median_Age), log(Incidence)),
             correlation_older = cor(log(Older), log(Incidence)),
@@ -110,9 +107,7 @@ covid19_spain %>%
 
 There are 30 days in the dataset. We can summarize the incidence by week (excluding Canarias):
 ```{r}
-week11.plot <- covid19_spain %>% 
-  left_join(provinces_spain, by = c("province", "CCAA", "ID_INE")) %>%
-  st_as_sf() %>%
+week11.plot <- covid19_spain %>%
   filter(CCAA != "Canarias") %>%
   group_by(province, week = isoweek(Date)) %>% 
   summarise(mean_weekly_incidence = mean(Incidence)) %>%
@@ -127,9 +122,7 @@ week11.plot <- covid19_spain %>%
         legend.position = "bottom") + 
   facet_wrap(~week)
 
-week12.plot <- covid19_spain %>% 
-  left_join(provinces_spain, by = c("province", "CCAA", "ID_INE")) %>%
-  st_as_sf() %>%
+week12.plot <- covid19_spain %>%
   filter(CCAA != "Canarias") %>%
   group_by(province, week = isoweek(Date)) %>% 
   summarise(mean_weekly_incidence = mean(Incidence)) %>%
@@ -144,9 +137,7 @@ week12.plot <- covid19_spain %>%
         legend.position = "bottom") + 
   facet_wrap(~week)
 
-week13.plot <- covid19_spain %>% 
-  left_join(provinces_spain, by = c("province", "CCAA", "ID_INE")) %>%
-  st_as_sf() %>%
+week13.plot <- covid19_spain %>%
   filter(CCAA != "Canarias") %>%
   group_by(province, week = isoweek(Date)) %>% 
   summarise(mean_weekly_incidence = mean(Incidence)) %>%
@@ -161,9 +152,7 @@ week13.plot <- covid19_spain %>%
         legend.position = "bottom") + 
   facet_wrap(~week)
 
-week14.plot <- covid19_spain %>% 
-  left_join(provinces_spain, by = c("province", "CCAA", "ID_INE")) %>%
-  st_as_sf() %>%
+week14.plot <- covid19_spain %>%
   filter(CCAA != "Canarias") %>%
   group_by(province, week = isoweek(Date)) %>% 
   summarise(mean_weekly_incidence = mean(Incidence)) %>%
@@ -181,15 +170,13 @@ week14.plot <- covid19_spain %>%
 grid.arrange(week11.plot, week12.plot, week13.plot, week14.plot, nrow = 2)
 ```
 
-We consider some control variables: ratio of male to female in the province, median age of the population, population density:
+We consider some control variables: GDP per capita in the province, percentage of older adults in the population, population density:
 ```{r}
-covid19_spain %>%
-  filter(CCAA != "Canarias", Date == "2020-03-13") %>%
-  left_join(provinces_spain, by = c("province", "CCAA", "ID_INE")) %>%
-  st_as_sf() %>%
+provinces_spain %>%
+  filter(CCAA != "Canarias") %>%
   ggplot() +
-  geom_sf(aes(fill = Male2Female)) +
-  scale_fill_distiller(name = "Male to Female Ratio", 
+  geom_sf(aes(fill = GDPpc)) +
+  scale_fill_distiller(name = "GDP per capita", 
                        palette = "Blues", 
                        direction = 1) +
   theme_tufte() +
@@ -197,15 +184,13 @@ covid19_spain %>%
         legend.position = "bottom")
 ```
 
-Median age of the population:
+Older adults:
 ```{r}
 covid19_spain %>% 
-  filter(CCAA != "Canarias", Date == "2020-03-13") %>%
-  left_join(provinces_spain, by = c("province", "CCAA", "ID_INE")) %>%
-  st_as_sf() %>%
+  filter(CCAA != "Canarias") %>%
   ggplot() +
-  geom_sf(aes(fill = Median_Age)) +
-  scale_fill_distiller(name = "Median Age of Population", 
+  geom_sf(aes(fill = as.numeric(Older))) +
+  scale_fill_distiller(name = "Percentage of older adults", 
                        palette = "Blues", 
                        direction = 1) +
   theme_tufte() +
@@ -216,28 +201,10 @@ covid19_spain %>%
 Population density:
 ```{r}
 covid19_spain %>% 
-  filter(CCAA != "Canarias", Date == "2020-03-13") %>%
-  left_join(provinces_spain, by = c("province", "CCAA", "ID_INE")) %>%
-  st_as_sf() %>%
+  filter(CCAA != "Canarias") %>%
   ggplot() +
   geom_sf(aes(fill = as.numeric(Density))) +
   scale_fill_distiller(name = "Population Density", 
-                       palette = "Blues", 
-                       direction = 1) +
-  theme_tufte() +
-  theme(axis.text = element_blank(),
-        legend.position = "bottom")
-```
-
-Older people:
-```{r}
-covid19_spain %>% 
-  filter(CCAA != "Canarias", Date == "2020-03-13") %>%
-  left_join(provinces_spain, by = c("province", "CCAA", "ID_INE")) %>%
-  st_as_sf() %>%
-  ggplot() +
-  geom_sf(aes(fill = as.numeric(Older))) +
-  scale_fill_distiller(name = "Percentage of older adults", 
                        palette = "Blues", 
                        direction = 1) +
   theme_tufte() +
@@ -249,11 +216,6 @@ We are also interested in the climatic variables. To visualize the distribution 
 ```{r}
 # Autonomous communities
 ccaa.sf <-  provinces_spain %>% 
-  left_join(covid19_spain %>% 
-              filter(Date == "2020-03-13") %>% 
-              select(ID_INE, CCAA), 
-            by = c("CCAA", "ID_INE")) %>%
-  drop_na() %>%
   group_by(CCAA) %>% 
   summarize(provinces = n())
 
@@ -322,6 +284,7 @@ covid19_spain %>%
 ```{r}
 # Definicion del panel para plm
 GPanel <- plm::pdata.frame(covid19_spain %>%
+                             st_drop_geometry() %>%
                              select(province, 
                                     Date,
                                     Incidence, 
@@ -350,7 +313,7 @@ Create connectivity matrix:
 ```{r}
 # Spatial weights matrix: 
 Wmat <- provinces_spain %>%
-  drop_na() %>%
+  #drop_na() %>%
   as("Spatial") %>%
   poly2nb(queen = FALSE) %>%
   nb2mat(zero.policy = TRUE)
@@ -569,8 +532,7 @@ Plot residuals on March 13 (positive autocorrelation):
 ```{r}
 covid19_spain %>% filter(Date == "2020-03-13") %>% 
   filter(CCAA != "Canarias") %>%
-  left_join(provinces_spain, by = c("province", "ID_INE")) %>%
-  st_as_sf() %>%  ggplot() +
+  ggplot() +
   geom_sf(aes(fill = Spatially_Autocorrelated_Residuals)) +
   scale_fill_distiller(name = "Autocorrelated Residuals", palette = "RdBu", direction = 1) +
   theme_tufte() + 
@@ -581,8 +543,6 @@ Plot residuals on March 24 (positive autocorrelation):
 ```{r}
 covid19_spain %>% filter(Date == "2020-03-24") %>% 
   filter(CCAA != "Canarias") %>%
-  left_join(provinces_spain, by = c("province", "ID_INE")) %>%
-  st_as_sf() %>%
   ggplot() +
   geom_sf(aes(fill = Spatially_Autocorrelated_Residuals)) +
   scale_fill_distiller(name = "Autocorrelated Residuals", palette = "RdBu", direction = 1) +
@@ -594,8 +554,6 @@ Plot residuals on April 11:
 ```{r}
 covid19_spain %>% filter(Date == "2020-04-11") %>% 
   filter(CCAA != "Canarias") %>%
-  left_join(provinces_spain, by = c("province", "ID_INE")) %>%
-  st_as_sf() %>%
   ggplot() +
   geom_sf(aes(fill = Spatially_Autocorrelated_Residuals)) +
   scale_fill_distiller(name = "Autocorrelated Residuals", palette = "RdBu", direction = 1) +
@@ -606,6 +564,7 @@ covid19_spain %>% filter(Date == "2020-04-11") %>%
 Are these spatially autocorrelated residuals correlated with any other potential control variables? Check the correlations:
 ```{r}
 covid19_spain %>% 
+  st_drop_geometry() %>%
   group_by(Date) %>%
   summarize(correlation_m2f = cor(log(Male2Female), Spatially_Autocorrelated_Residuals),
             correlation_age = cor(log(Median_Age), Spatially_Autocorrelated_Residuals),
