@@ -6,7 +6,7 @@
 \title{covid19env: A package with datasets for analysis of environmental correlates of COVID-19.}
 \description{
 This package includes datasets used for the analysis
-of the environmental correlates of COVID-19 with their
+of the climatic correlates of COVID-19 with their
 respective documentation.
 }
 \references{

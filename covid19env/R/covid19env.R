@@ -1,7 +1,7 @@
 #' covid19env: A package with datasets for analysis of environmental correlates of COVID-19.
 #'
 #' This package includes datasets used for the analysis
-#' of the environmental correlates of COVID-19 with their
+#' of the climatic correlates of COVID-19 with their
 #' respective documentation.
 #'
 #' @docType package
@@ -13,11 +13,11 @@ NULL
 #' COVID-19 Data for Spain.
 #'
 #' A dataset containing COVID-19 information for Spain, including
-#' environmental correlates and some control variables.
+#' climatic correlates and control variables.
 #'
-#' @format A simple features dataframe with 1100 rows and 25 variables:
+#' @format A dataframe with 1500 rows and 34 variables:
 #' \describe{
-#'   \item{Province}{Names of provinces in Spain as factor}
+#'   \item{province}{Names of provinces in Spain as factor}
 #'   \item{CCAA}{Names of Autonomous Communities in Spain as factor}
 #'   \item{ID_INE}{National Institute of Statistics unique identifier of the provinces}
 #'   \item{Date}{Date}
@@ -78,3 +78,26 @@ NULL
 #'  data(covid19_spain)
 #'  summary(covid19_spain)
 "covid19_spain"
+
+#' Provinces in Spain.
+#'
+#' A simple features object with the provinces in Spain.
+#'
+#' @format A simple features dataframe with 52 rows and 4 columns:
+#' \describe{
+#'   \item{province}{Names of provinces in Spain as factor}
+#'   \item{CCAA}{Names of Autonomous Communities in Spain as factor}
+#'   \item{ID_INE}{National Institute of Statistics unique identifier of the provinces}
+#'   \item{geometry}{geometry of the simple features object}
+#' }
+#'
+#' @docType data
+#' @keywords datasets
+#' @name provinces_spain
+#' @usage data(provinces_spain)
+#' @source Instituto Nacional de Estadistica http://www.ine.es/
+#' @examples
+#'  data(provinces_spain)
+#'  summary(provinces_spain)
+"provinces_spain"
+

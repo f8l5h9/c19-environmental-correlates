@@ -5,9 +5,9 @@
 \alias{covid19_spain}
 \title{COVID-19 Data for Spain.}
 \format{
-A simple features dataframe with 1100 rows and 25 variables:
+A dataframe with 1500 rows and 34 variables:
 \describe{
-  \item{Province}{Names of provinces in Spain as factor}
+  \item{province}{Names of provinces in Spain as factor}
   \item{CCAA}{Names of Autonomous Communities in Spain as factor}
   \item{ID_INE}{National Institute of Statistics unique identifier of the provinces}
   \item{Date}{Date}
@@ -68,7 +68,7 @@ data(covid19_spain)
 }
 \description{
 A dataset containing COVID-19 information for Spain, including
-environmental correlates and some control variables.
+climatic correlates and control variables.
 }
 \examples{
  data(covid19_spain)
