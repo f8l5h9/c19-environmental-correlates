@@ -277,40 +277,46 @@ Methods: Spatial SUR
 
 # The econometric model
 
-The baseline model propouse in this paper is a classical SUR model without spatial effects (from here, SUR-SIM). Following the classical expresion for thios model in stacked form
+The baseline model propouse in this paper is a classical SUR model without spatial effects (from here, SUR-SIM). The classical expresion for this model in stacked form is,
 
 \begin{equation}
 \begin{bmatrix}
-y_1 \\ y_2 \\ ... \\ y_T
+y_1 \\ y_2 \\ \vdots \\ y_T
 \end{bmatrix}
 =
 \begin{bmatrix}
-X_1 & 0 & ... & 0 \\ 0 & X_2 & ... & 0 \\ ... & ... & ... & ... \\ 0 & 0 & ... & X_T
+X_1 & 0 & \cdots & 0 \\ 0 & X_2 & \cdots & 0 \\ \vdots & \vdots & \ddots & \vdots \\ 0 & 0 & \cdots & X_T
 \end{bmatrix}
 \
 \begin{bmatrix}
-\beta_1 \\ \beta_1 \\ ... \\ \beta_T
+\beta_1 \\ \beta_1 \\ \vdots \\ \beta_T
 \end{bmatrix}
 +
 \begin{bmatrix}
-\epsilon_1 \\ \epsilon_2 \\ ... \\ \epsilon_T
+\epsilon_1 \\ \epsilon_2 \\ \vdots \\ \epsilon_T
 \end{bmatrix}
 \label{eq:sur-sim}
 \end{equation}
 
-where $y_{t}=(y_{1t},...,y_{Nt})$ is the incidence ratio in the province $s$ ($s=1,...,N$) the day $t$ $(t=1,...,T)$; $X_t$ is a $N \times k_t$ matrix of the $k_t$ independen variables; $\beta_t=(\beta_{1t},...,\beta_{Nt})$ is a vector of coefficients and $\epsilon$ is the error vector. Like is characteristic in SUR model, we consider dependence among error vector $E[\epsilon_t \epsilon'_{t'}]=\sigma_{tt'}]$. Note that this especification is flexible allowing changes in the coefficients $\beta_{it}$ in order to modulate the effect of $X_it$ on $y_t$. This flexibility is not always diserable and is posible impose restrinctions and consider time constant some $\beta$ coefficients. In this case we can reformulate the coefficients expression of $\beta_t=(\beta_{1},...,\beta_{r},\beta_{r+1},...,\beta_{Nt})$ if we want to consider the first $r$ coefficients contanst.
-The equation @ref{eq:sur-sim} can be write in compact form,
+where $y_{t}=(y_{1t},...,y_{Nt})$ is a $N \times 1$ vector, and in our case $y_{st}$ is the incidence ratio in the province $s$ ($s=1,...,N$) the day $t$ $(t=1,...,T)$; $X_t=(X^1,...,X^{k_t})$ is a $N \times k_t$ matrix of the $k_t$ independent variables, $X_i=(X^i_{st})$; $\beta_t=(\beta_{1t},...,\beta_{Nt})$ is a vector of coefficients and $\epsilon_t=(\epsilon_{1t},...,\epsilon_{Nt})$ is the error vector. 
+
+the more relevant characteristic in SUR model,is the dependence among error vector,
+
+\begin{equation}
+E[\epsilon_t \epsilon'_{t'}]=\sigma_{tt'}
+\label{eq:sur-err}
+\end{equation} 
+
+Note that this especification is highly flexible, allowing changes in the coefficients $\beta_{it}$ in order to modulate the effect of $X^i_{.t}$ on $y_t$. This flexibility can be reduced and it is posible to impose restrinctions considerong time constant some $\beta$ coefficients. In this case, we can reformulate the coefficients expression of $\beta_t=(\beta_{1},...,\beta_{r},\beta_{r+1},...,\beta_{Nt})$ considering the first $r$ coefficients contanst.
+
+The equation (\ref{eq:sur-sim}) can be rewrite in compact form,
 \begin{equation}
 y = X \beta + \epsilon
 \end{equation}
 where....
 
+Like in case of cross-section, it is possible identify spatial autocorrelation in the residuals of (\ref{eq:sur-sim}) and several Lagrange Multipliers tests has been develop to test the null of spatial independence (see @López2014). In case of reject the null alternative several specifications has been propose to include spatial effects (@Anselin1988, see also @Aselin2006). In this paper we consider the specific spatial SUR model tahr incorpore a spatial lag of the dependent variable as an explanatory factor. The stack expresion for the spatial lag SUR model (SUR-SLM),
 
-Like in case of cross-section, it is possible identify spatial autocorrelation in the residuals of @ref{eq:sur-sim} and several tests has been develop to test the null of spatial independence (López Mur Herrera). In case of reject the null alternative specifications has been propose to include spatial effects (@Anselin1988, see also @Aselin2006). The taxonomy of spatial mod- els that we present in this paper is well known (see Elhorst 2014) and we extend in the SUR framework.
-
-The spatial lag SUR model (SUR-SLM) incorporates a spatial lag of the dependent variable as an explanatory factor.
-
-In this paper we consider the spatial lag model
 \begin{equation}
 \bf{A}y = X \beta + \epsilon \\
 \epsilon =N(0,\Omega)
@@ -318,13 +324,9 @@ In this paper we consider the spatial lag model
 \end{equation}
 where A =$I_{TN}-\bf{\Lambda} \otimes W$ with $\bf{\Lambda} = diag(\lambda_1,...,\lambda_T)$.
 
-This model can be estimated by maximum likelihood (ref) or instrumental variables (ref). We considerer this methodology to estimate the model. 
-This specification assumes that inceidencein a province ($y_st$) is partially determined by the weighted average (Wy_st) of incidence in neighbouring provinces. Parameter $\lambda_t$ identifies the intensity and the sign of the impacts.
-The strategies of selection and comparison between these models are present in López et al. (2014)
+This specification assumes that incidence in a province ($y_st$) at time $t$ is partially determined by the weighted average ($Wy_{st}$) of incidence in neighbouring provinces. Parameters of spatial dependence are estimated for each time period $\lambda_t$ and identifies the intensity and the sign of the impacts of neighbourhood. It is possible test the null hypotheis of identtical levels of spatial dependence ($\lambda_i=\lambda_j, \forall i,j$). The correspond Wald test is available in the R package **spsur** 
 
- 
-where $y_{t}=(y_{1t},...,y_{Nt})$ is the incidence ratio in the province $s$ ($s=1,...,N$) in day $t$ $(t=1,...,T)$, $X_{st}=(X^1_{st},...,X^k_{st})$ is a vector of k independent variables observed in (s,t). The model consider $\beta_t=(\beta^1_t,...,\beta^k_t)$ coefficients constant in $s$. The panel model enables correlation between residuals of explanatory models of each time period $t$, such that $E[\epsilon_t \epsilon'_{t'}]=\sigma_{tt'}]$
-
+The SUR-SLM model can be estimated by maximum likelihood (@lopez2014) or instrumental variables (@Minguez2019). We considerer this methodology to estimate the model. 
 
 Analysis and Results
 ===================
