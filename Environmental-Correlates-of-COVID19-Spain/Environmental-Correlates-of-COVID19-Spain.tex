@@ -92,17 +92,22 @@ in the provinces in Spain}
    \ead{paezha@mcmaster.ca} 
     \author[Universidad Politecnica de Cartagena]{Fernando A. Lopez}
    \ead{fernando.lopez@upct.es} 
-    \author[Universidade Federal de Pernambuco]{Tatiane Almeida de Menezes}
-   \ead{tatianedemenezes@gmail.com} 
-    \author[Universidade Federal de Pernambuco]{Renata Cavalcanti}
-   \ead{email@ufp.br} 
-    \author[Universidade Federal de Pernambuco]{Maira Galdino da Rocha Pitta}
-   \ead{email@ufp.br} 
-      \address[McMaster University]{School of Geography and Earth Sciences, 1281 Main St W, Hamilton, ON,
-L8S 4K1, Canada}
+    \author[Departamento de Economia]{Tatiane Menezes}
+   \ead{tatiane.menezes@ufpe.br} 
+    \author[Nucleo de Pesquisa]{Renata Cavalcanti}
+   \ead{renata.vcsantos@gmail.com} 
+    \author[Nucleo de Pesquisa]{Maira Galdino da Rocha Pitta}
+   \ead{mgrpitta@ufpe.br} 
+      \address[McMaster University]{School of Geography and Earth Sciences, McMaster University, 1281 Main
+St W, Hamilton, ON, L8S 4K1, Canada}
     \address[Universidad Politecnica de Cartagena]{Departamento de Metodos Cuantitativos, Ciencias Juridicas, y Lenguas
-Modernas, Calle Real Numero 3, 30201, Cartagena, Murcia, Spain}
-    \address[Universidade Federal de Pernambuco]{Departamento de Economia da Universidade Federal de Pernambuco - UFPE}
+Modernas, Universidad Politecnica de Cartagena, Calle Real Numero 3,
+30201, Cartagena, Murcia, Spain}
+    \address[Departamento de Economia]{Departamento de Economia, Universidade Federal de Pernambuco, Av dos
+Economistas, s/n - Cidade Universitária, Recife - PE, 50670-901, Brasil}
+    \address[Nucleo de Pesquisa]{Núcleo de Pesquisa em Inovação Terapêutica NUPIT / UFPE, Av.
+Prof.~Moraes Rego, 1235 - Cidade Universitária, Recife, PE, CEP
+50670-901, Brazil}
       \cortext[1]{Corresponding Author}
   
   \begin{abstract}
@@ -257,59 +262,61 @@ were implemented? The lockdown?
 
 Explain the rationale for selecting the variables.
 
-\hypertarget{sources-of-data-and-data-preparation}{%
-\subsection{Sources of Data and Data
-Preparation}\label{sources-of-data-and-data-preparation}}
+For example: The literature about COVID-19 suggested that population
+density is the one of the most important proliferate cause of these
+viscous, however this ill spread with different intensity at big cities
+of the world. Controlling for socioeconomic characteristics the
+objective of this paper is observe the effect of clime on COVID-19
+proliferation.
 
-Explain the sources of data and data preprocessing.
+Some questions are important to point out. Is not evident present a
+diary association between the temprature (resp. humidity) with declarate
+case. There is evidences (ref) that a time lag is necessary between the
+day that the individuo inffect and the case is diagnosticate
 
-Descriptive statistics of the incidence of COVID-19 and provincial
-economic and demographic variables are shown in Table
-\ref{tab:descriptive-statistics}.
+\hypertarget{sources-of-data}{%
+\subsection{Sources of Data}\label{sources-of-data}}
+
+Our dataset includes information about the daily number of cases of
+COVID-19 reported in Spain \footnote{cases tested} at the provincial
+level (NUTIII in eurostat terminology) from March 13th to April 11th (30
+days and 50 spatial units). The Spanish National Government publishes
+periodic updates at the regional level (NUTII) and the information is
+also released at the provincial level as part of a collaborative project
+\footnote{\url{https://code.montera34.com:4443/numeroteca/covid19/-/blob/master/README_providencialdata19.md}}.
+This information is compiled from several sources, mainly the official
+web pages of the Spanish regional goverments. In addition, we consider
+two sets of explanatory variables. The first one, and the focus of this
+research, is set of two environmental variables, namely temperature and
+humidity. The second set provides some relevant controls for
+multivariate analysis, and refers to economic and demographic attributes
+of the province. Table \ref{tab:descriptive-statistics} shows the
+descriptive statistics and the provencance of the data.
 
 \begin{table}
 
 \caption{\label{tab:descriptive-statistics}\label{tab:descriptive-statistics}Descriptive statistics}
 \centering
 \resizebox{\linewidth}{!}{
-\begin{tabular}[t]{l>{\raggedright\arraybackslash}p{15em}rrrr>{\raggedright\arraybackslash}p{15em}}
+\begin{tabular}[t]{l>{\raggedright\arraybackslash}p{15em}rrrr>{\raggedright\arraybackslash}p{6em}}
 \toprule
 Variable & Note & Min & Mean & Max & SD & Source\\
 \midrule
-\rowcolor{gray!6}  SARS-19 Incidence & Incidence in reported cases of SARS-19 per 100,000 people & 0.38 & 153.61 & 1149.36 & 186.23 & Source\\
-GDPpc & GDP per capita in €1,000s & 16.67 & 22.51 & 36.00 & 4.77 & Source\\
-\rowcolor{gray!6}  Older & Percentage of people aged 65 and older in the province & 15.16 & 21.03 & 31.36 & 3.95 & Source\\
-Population Density & Population density in the province in people per sq.km & 8.60 & 140.04 & 829.76 & 181.25 & Source\\
+\rowcolor{gray!6}  SARS-19 Incidence & Incidence in reported cases of SARS-19 per 100,000 people & 0.38 & 153.61 & 1149.36 & 186.23 & Datalista\\
+GDPpc & GDP per capita in €1,000s & 16.67 & 22.51 & 36.00 & 4.77 & INE\\
+\rowcolor{gray!6}  Older & Percentage of people aged 65 and older in the province & 15.16 & 21.03 & 31.36 & 3.95 & INE\\
+Population Density & Population density in the province in people per sq.km & 8.60 & 140.04 & 829.76 & 181.25 & INE\\
+\rowcolor{gray!6}  Mean Temperature & Mean temperature in province by date, in C & 1.00 & 12.18 & 23.20 & 3.67 & AEMET\\
+\addlinespace
+Humidity & Relative humidity in province by date & 2.00 & 77.82 & 100.00 & 10.37 & MAPA\\
 \bottomrule
+\multicolumn{7}{l}{\textit{Note: }}\\
+\multicolumn{7}{l}{Datalista: }\\
+\multicolumn{7}{l}{INE (Instituto Nacional de Estadistica): https://www.ine.es/}\\
+\multicolumn{7}{l}{AEMET (Agencia Estatal de Meteorologia): http://eportal.mapa.gob.es}\\
+\multicolumn{7}{l}{MAPA (Ministerio de Agricultura, Pesca y Alimentacion): http://eportal.mapa.gob.es}\\
 \end{tabular}}
 \end{table}
-
-\begin{figure}
-\centering
-\includegraphics{Environmental-Correlates-of-COVID19-Spain_files/figure-latex/weekly-average-incidence-map-1.pdf}
-\caption{\label{fig:weekly-average-incidence-map}Mean weekly incidence
-of COVID-19 by province, in reported cases by 100,000 people}
-\end{figure}
-
-\begin{figure}
-\centering
-\includegraphics{Environmental-Correlates-of-COVID19-Spain_files/figure-latex/descriptives-temperature-1.pdf}
-\caption{\label{fig:descriptives-temperature} Distribution of
-temperatures in the Autonomous Communities in Spain between March 12,
-2020 and April 11, 2020. The Autonomous Communities have been sorted by
-latitude, with communities to the left being the northermost, and to the
-right the southernmost}
-\end{figure}
-
-\begin{figure}
-\centering
-\includegraphics{Environmental-Correlates-of-COVID19-Spain_files/figure-latex/descriptives-humidity-1.pdf}
-\caption{\label{fig:descriptives-humidity} Distribution of humidity in
-the Autonomous Communities in Spain between March 12, 2020 and April 11,
-2020. The Autonomous Communities have been sorted by latitude, with
-communities to the left being the northermost, and to the right the
-southernmost}
-\end{figure}
 
 \hypertarget{methods-spatial-sur}{%
 \section{Methods: Spatial SUR}\label{methods-spatial-sur}}
@@ -318,82 +325,87 @@ southernmost}
 \section{The econometric model}\label{the-econometric-model}}
 
 The baseline model propouse in this paper is a classical SUR model
-without spatial effects (from here, SUR-SIM). Following the classical
-expresion for thios model in stacked form
+without spatial effects (from here, SUR-SIM). The classical expresion
+for this model in stacked form is,
 
 \begin{equation}
 \begin{bmatrix}
-y_1 \\ y_2 \\ ... \\ y_T
+y_1 \\ y_2 \\ \vdots \\ y_T
 \end{bmatrix}
 =
 \begin{bmatrix}
-X_1 & 0 & ... & 0 \\ 0 & X_2 & ... & 0 \\ ... & ... & ... & ... \\ 0 & 0 & ... & X_T
+X_1 & 0 & \cdots & 0 \\ 0 & X_2 & \cdots & 0 \\ \vdots & \vdots & \ddots & \vdots \\ 0 & 0 & \cdots & X_T
 \end{bmatrix}
 \
 \begin{bmatrix}
-\beta_1 \\ \beta_1 \\ ... \\ \beta_T
+\beta_1 \\ \beta_1 \\ \vdots \\ \beta_T
 \end{bmatrix}
 +
 \begin{bmatrix}
-\epsilon_1 \\ \epsilon_2 \\ ... \\ \epsilon_T
+\epsilon_1 \\ \epsilon_2 \\ \vdots \\ \epsilon_T
 \end{bmatrix}
 \label{eq:sur-sim}
 \end{equation}
 
-where \(y_{t}=(y_{1t},...,y_{Nt})\) is the incidence ratio in the
-province \(s\) (\(s=1,...,N\)) the day \(t\) \((t=1,...,T)\); \(X_t\) is
-a \(N \times k_t\) matrix of the \(k_t\) independen variables;
-\(\beta_t=(\beta_{1t},...,\beta_{Nt})\) is a vector of coefficients and
-\(\epsilon\) is the error vector. Like is characteristic in SUR model,
-we consider dependence among error vector
-\(E[\epsilon_t \epsilon'_{t'}]=\sigma_{tt'}]\). Note that this
-especification is flexible allowing changes in the coefficients
-\(\beta_{it}\) in order to modulate the effect of \(X_it\) on \(y_t\).
-This flexibility is not always diserable and is posible impose
-restrinctions and consider time constant some \(\beta\) coefficients. In
-this case we can reformulate the coefficients expression of
-\(\beta_t=(\beta_{1},...,\beta_{r},\beta_{r+1},...,\beta_{Nt})\) if we
-want to consider the first \(r\) coefficients contanst. The equation
-({\textbf{???}})\{eq:sur-sim\} can be write in compact form,
+where \(y_{t}=(y_{1t},...,y_{Nt})\) is a \(N \times 1\) vector, and in
+our case \(y_{st}\) is the incidence ratio in the province \(s\)
+(\(s=1,...,N\)) the day \(t\) \((t=1,...,T)\); \(X_t=(X^1,...,X^{k_t})\)
+is a \(N \times k_t\) matrix of the \(k_t\) independent variables,
+\(X_i=(X^i_{st})\); \(\beta_t=(\beta_{1t},...,\beta_{Nt})\) is a vector
+of coefficients and \(\epsilon_t=(\epsilon_{1t},...,\epsilon_{Nt})\) is
+the error vector.
+
+the more relevant characteristic in SUR model,is the dependence among
+error vector,
+
+\begin{equation}
+E[\epsilon_t \epsilon'_{t'}]=\sigma_{tt'}
+\label{eq:sur-err}
+\end{equation}
+
+Note that this especification is highly flexible, allowing changes in
+the coefficients \(\beta_{it}\) in order to modulate the effect of
+\(X^i_{.t}\) on \(y_t\). This flexibility can be reduced and it is
+posible to impose restrinctions considerong time constant some \(\beta\)
+coefficients. In this case, we can reformulate the coefficients
+expression of
+\(\beta_t=(\beta_{1},...,\beta_{r},\beta_{r+1},...,\beta_{Nt})\)
+considering the first \(r\) coefficients contanst.
+
+The equation (\ref{eq:sur-sim}) can be rewrite in compact form,
 \begin{equation}
 y = X \beta + \epsilon
 \end{equation} where\ldots.
 
 Like in case of cross-section, it is possible identify spatial
-autocorrelation in the residuals of ({\textbf{???}})\{eq:sur-sim\} and
-several tests has been develop to test the null of spatial independence
-(López Mur Herrera). In case of reject the null alternative
-specifications has been propose to include spatial effects
-(({\textbf{???}}), see also ({\textbf{???}})). The taxonomy of spatial
-mod- els that we present in this paper is well known (see Elhorst 2014)
-and we extend in the SUR framework.
+autocorrelation in the residuals of (\ref{eq:sur-sim}) and several
+Lagrange Multipliers tests has been develop to test the null of spatial
+independence (see López et al. (2014)). In case of reject the null
+alternative several specifications has been propose to include spatial
+effects (Anselin (1988), see also Anselin (2016)). In this paper we
+consider the specific spatial SUR model tahr incorpore a spatial lag of
+the dependent variable as an explanatory factor. The stack expresion for
+the spatial lag SUR model (SUR-SLM),
 
-The spatial lag SUR model (SUR-SLM) incorporates a spatial lag of the
-dependent variable as an explanatory factor.
-
-In this paper we consider the spatial lag model \begin{equation}
+\begin{equation}
 \bf{A}y = X \beta + \epsilon \\
 \epsilon =N(0,\Omega)
 \label{eq:sur-slm}
 \end{equation} where A =\(I_{TN}-\bf{\Lambda} \otimes W\) with
 \(\bf{\Lambda} = diag(\lambda_1,...,\lambda_T)\).
 
-This model can be estimated by maximum likelihood (ref) or instrumental
-variables (ref). We considerer this methodology to estimate the model.
-This specification assumes that inceidencein a province (\(y_st\)) is
-partially determined by the weighted average (Wy\_st) of incidence in
-neighbouring provinces. Parameter \(\lambda_t\) identifies the intensity
-and the sign of the impacts. The strategies of selection and comparison
-between these models are present in López et al.~(2014)
+This specification assumes that incidence in a province (\(y_st\)) at
+time \(t\) is partially determined by the weighted average (\(Wy_{st}\))
+of incidence in neighbouring provinces. Parameters of spatial dependence
+are estimated for each time period \(\lambda_t\) and identifies the
+intensity and the sign of the impacts of neighbourhood. It is possible
+test the null hypotheis of identtical levels of spatial dependence
+(\(\lambda_i=\lambda_j, \forall i,j\)). The correspond Wald test is
+available in the R package \textbf{spsur}
 
-where \(y_{t}=(y_{1t},...,y_{Nt})\) is the incidence ratio in the
-province \(s\) (\(s=1,...,N\)) in day \(t\) \((t=1,...,T)\),
-\(X_{st}=(X^1_{st},...,X^k_{st})\) is a vector of k independent
-variables observed in (s,t). The model consider
-\(\beta_t=(\beta^1_t,...,\beta^k_t)\) coefficients constant in \(s\).
-The panel model enables correlation between residuals of explanatory
-models of each time period \(t\), such that
-\(E[\epsilon_t \epsilon'_{t'}]=\sigma_{tt'}]\)
+The SUR-SLM model can be estimated by maximum likelihood (López et al.
+(2014)) or instrumental variables (Mínguez et al. (2019)). We considerer
+this methodology to estimate the model.
 
 \hypertarget{analysis-and-results}{%
 \section{Analysis and Results}\label{analysis-and-results}}
@@ -401,14 +413,58 @@ models of each time period \(t\), such that
 \hypertarget{exploratory-data-analysis}{%
 \subsection{Exploratory Data Analysis}\label{exploratory-data-analysis}}
 
-The literature about COVID-19 suggested that population density is the
-one of the most important proliferate cause of these viscous, however
-this ill spread with different intensity at big cities of the world.
-Controlling for socioeconomic characteristics the objective of this
-paper is observe the effect of clime on COVID-19 proliferation.
+We begin with the exploratory analysis of the data.
 
-We begin with the exploratory analysis of the data. Figure
-\ref{fig:daily-correlations} shows the distribution of daily
+Figure \ref{fig:weekly-average-incidence-map} shows the geographical
+variation in the incidence of the disease, as well as its temporal
+progression in weekly averages. Our analysis begins on March 13, which
+is the first date when every province had reported at least one case of
+COVID-19. It can be seen that the highest incidence at this early date
+was in the provice of Álava, in the North of Spain. While not the most
+populous province, with a population of only 331,549, Álava has the
+highest GDP per capita of all provinces. Vitoria, its main city, is the
+capital of the Basque country and has been the focus of efforts to
+develop a ``Global Basque City'' (Meijers et al., 2008), along with San
+Sebastian and Bilbao. The other early focus of the pandemic in Spain was
+Madrid, which is the most populous province in the country and has the
+second highest GDP per capita after Álava. The early outbreaks in these
+two provinces can be traced throughout the progression of the pandemic
+over time, although by the end of the period under consideration, other
+provinces had matched and even surpased their incidence rates, including
+Segovia and Soria to the north of Madrid, and Ciudad Real and Albacete
+to the south.
+
+\begin{figure}
+\centering
+\includegraphics{Environmental-Correlates-of-COVID19-Spain_files/figure-latex/weekly-average-incidence-map-1.pdf}
+\caption{\label{fig:weekly-average-incidence-map}Mean weekly incidence
+of COVID-19 by province, in reported cases by 100,000 people (map omits
+Islas Canarias)}
+\end{figure}
+
+To visualize the distribution of temperature and humidity we aggregate
+the provinces by Autonomous Community. In Figure
+\ref{fig:descriptives-temperature} the communities have been sorted by
+latitude, so that Principado de Asturias is the northernmost community,
+and Canarias the southernmost. There is a relatively wide range of
+values both within and between provinces over the 30 day period
+examined. The top panel of the figure shows the distribution of mean
+temperature. The lowest mean temperature for a community on any given
+day is 2.8C, and the highest is 22.4C for a range of approximately 20
+degrees. Likewise, there is a great deal of variability in humidity, as
+seen in the bottom panel of the figure, where the lowest mean humidity
+for any community is 48.3 and the highest is 99.6. The actual values for
+the provinces display somewhat more variability even.\\
+\includegraphics{Environmental-Correlates-of-COVID19-Spain_files/figure-latex/descriptives-temperature-1.pdf}
+
+\begin{figure}
+\centering
+\includegraphics{Environmental-Correlates-of-COVID19-Spain_files/figure-latex/control-map-1.pdf}
+\caption{\label{fig:control-map}Spatial distribution of control
+variables by province (maps omits Islas Canarias)}
+\end{figure}
+
+Figure \ref{fig:daily-correlations} shows the distribution of daily
 correlations of the independent variables with incidence of COVID-19,
 after log-transforming all variables. It can be seen there that the
 correlation of GDPpc and temperature (in its three definitions) have the
@@ -483,6 +539,15 @@ Kaplan, D.M., 2020. Rticles: Article formats for r markdown.
 \leavevmode\hypertarget{ref-Angulo2020spsur}{}%
 Angulo, A., Lopez, F.A., Minguez, R., Mur, J., 2020. Spsur: Spatial
 seemingly unrelated regression models.
+
+\leavevmode\hypertarget{ref-Anselin1988spatial}{}%
+Anselin, L., 1988. Spatial econometrics: Methods and models, Studies in
+operational regional science. Kluwer Academic Publishers, Dordrecht.
+
+\leavevmode\hypertarget{ref-Anselin2016estimation}{}%
+Anselin, L., 2016. Estimation and testing in the spatial seemingly
+unrelated regression (sur). Geoda Center for Geospatial Analysis;
+Computation, Arizona State University. Working Paper 2016-01.
 
 \leavevmode\hypertarget{ref-Araujo2020spread}{}%
 Araujo, M.B., Naimi, B., 2020. Spread of sars-cov-2 coronavirus likely
@@ -563,6 +628,11 @@ Lancastle, N.M., 2020. Is the impact of social distancing on coronavirus
 growth rates effective across different settings? A non-parametric and
 local regression approach to test and compare the growth rate. medRxiv.
 
+\leavevmode\hypertarget{ref-Lopez2014spatial}{}%
+López, F.A., Mur, J., Angulo, A., 2014. Spatial model selection
+strategies in a sur framework. The case of regional productivity in eu.
+The Annals of Regional Science 53, 197--220.
+
 \leavevmode\hypertarget{ref-Luo2020how}{}%
 Luo, S., Tsang, K.P., 2020. How much of china and world gdp has the
 coronavirus reduced? Available at SSRN 3543760.
@@ -574,10 +644,21 @@ Cold temperature and low humidity are associated with increased
 occurrence of respiratory tract infections. Respiratory medicine 103,
 456--462.
 
+\leavevmode\hypertarget{ref-Meijers2008strategic}{}%
+Meijers, E., Hoekstra, J., Aguado, R., 2008. Strategic planning for city
+networks: The emergence of a basque global city? International Planning
+Studies 13, 239--259.
+doi:\href{https://doi.org/10.1080/13563470802521440}{10.1080/13563470802521440}
+
 \leavevmode\hypertarget{ref-Millo2017robust}{}%
 Millo, G., 2017. Robust standard error estimators for panel models: A
 unifying approach. Journal of Statistical Software 82, 1--27.
 doi:\href{https://doi.org/10.18637/jss.v082.i03}{10.18637/jss.v082.i03}
+
+\leavevmode\hypertarget{ref-Minguez2019}{}%
+Mínguez, R., López, F., Mur, J., 2019. ML versus iv estimates of spatial
+sur models: Evidence from the case of airbnb in madrid urban area. The
+Annals of Regional Science 1--35.
 
 \leavevmode\hypertarget{ref-National2020rapid}{}%
 National Academies of Sciences, Engineering and Medicine, 2020. Rapid
