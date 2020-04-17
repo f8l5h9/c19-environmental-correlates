@@ -137,166 +137,8 @@ Explain the rationale for selecting the variables.
 
 Explain the sources of data and data preprocessing.
 
-Figure \ref{fig:weekly-average-incidence-map} shows the geographical variation in the incidence of the disease, as well as its temporal progression in weekly averages. Our analysis begins on March 13, which is the first date when every province had reported at least one case of COVID-19. It can be seen that the highest incidence at this early date was in the provice of Álava, in the North of Spain. While not the most populous province, with a population of only 331,549, Álava has the highest GDP per capita of all provinces. Vitoria, its main city, is the capital of the Basque country and has been the focus of efforts to develop a "Global Basque City" [@Meijers2008strategic], along with San Sebastian and Bilbao. The other early focus of the pandemic in Spain was Madrid, which is the most populous province in the country and has the second highest GDP per capita after Álava. The early outbreaks in these two provinces can be traced throughout the progression of the pandemic over time, although by the end of the period under consideration, other provinces had matched and even surpased their incidence rates, including Segovia and Soria to the north of Madrid, and Ciudad Real and Albacete to the south.
+Descriptive statistics of the incidence of COVID-19 and provincial economic and demographic variables are shown in Table \ref{tab:descriptive-statistics}.
 
-```{r weekly-average-incidence-map, echo=FALSE, fig.height= 9, fig.cap="\\label{fig:weekly-average-incidence-map}Mean weekly incidence of COVID-19 by province, in reported cases by 100,000 people (map omits Islas Canarias)", warning=FALSE}
-# Retrieve the coordinates of Madrid
-madrid_xy <-  st_centroid(provinces_spain %>% filter(province == "Madrid")) %>% st_coordinates()
-
-week11.plot <- covid19_spain %>%
-  filter(CCAA != "Canarias") %>%
-  group_by(province, week = isoweek(Date)) %>% 
-  summarise(mean_weekly_incidence = mean(Incidence)) %>%
-  filter(week == 11) %>%
-  ggplot() +
-  geom_sf(aes(fill = mean_weekly_incidence)) +
-  scale_fill_distiller(name = "Mean Weekly Incidence", 
-                       palette = "Reds", 
-                       direction = 1) +
-  ggtitle("March 13 - March 15") +
-  theme_tufte() +
-  theme(axis.text = element_blank(),
-        legend.position = "bottom",
-        plot.margin = margin(0, 0, 0, 0, "cm")) +
-  geom_sf_text(label = "Madrid", 
-               x = madrid_xy[1] - 4.9, 
-               y = madrid_xy[2] + 0.6,
-               family = "serif") +
-  geom_segment(x = madrid_xy[1] - 3.4, 
-               y = madrid_xy[2] + 0.5, 
-               xend = madrid_xy[1], 
-               yend = madrid_xy[2])
-
-
-week12.plot <- covid19_spain %>%
-  filter(CCAA != "Canarias") %>%
-  group_by(province, week = isoweek(Date)) %>% 
-  summarise(mean_weekly_incidence = mean(Incidence)) %>%
-  filter(week == 12) %>%
-  ggplot() +
-  geom_sf(aes(fill = mean_weekly_incidence)) +
-  scale_fill_distiller(name = "Mean Weekly Incidence", 
-                       palette = "Reds",
-                       direction = 1) +
-  ggtitle("March 16 - March 22") +
-  theme_tufte() +
-  theme(axis.text = element_blank(),
-        legend.position = "bottom",
-        plot.margin = margin(0, 0, 0, 0, "cm")) +
-  geom_sf_text(label = "Madrid", x = madrid_xy[1] - 4.9, y = madrid_xy[2] + 0.6) +
-  geom_segment(x = madrid_xy[1] - 3.4, y = madrid_xy[2] + 0.5, xend = madrid_xy[1], yend = madrid_xy[2])
-
-week13.plot <- covid19_spain %>%
-  filter(CCAA != "Canarias") %>%
-  group_by(province, week = isoweek(Date)) %>% 
-  summarise(mean_weekly_incidence = mean(Incidence)) %>%
-  filter(week == 13) %>%
-  ggplot() +
-  geom_sf(aes(fill = mean_weekly_incidence)) +
-  scale_fill_distiller(name = "Mean Weekly Incidence", 
-                       palette = "Reds", 
-                       direction = 1) +
-  ggtitle("March 23 - March 29") +
-  theme_tufte() +
-  theme(axis.text = element_blank(),
-        legend.position = "bottom",
-        plot.margin = margin(0, 0, 0, 0, "cm")) +
-  geom_sf_text(label = "Madrid",
-               x = madrid_xy[1] - 4.9, 
-               y = madrid_xy[2] + 0.6,
-               family = "serif") +
-  geom_segment(x = madrid_xy[1] - 3.4, 
-               y = madrid_xy[2] + 0.5, 
-               xend = madrid_xy[1], 
-               yend = madrid_xy[2])
-
-week14.plot <- covid19_spain %>%
-  filter(CCAA != "Canarias") %>%
-  group_by(province, week = isoweek(Date)) %>% 
-  summarise(mean_weekly_incidence = mean(Incidence)) %>%
-  filter(week == 14) %>%
-  ggplot() +
-  geom_sf(aes(fill = mean_weekly_incidence)) +
-  scale_fill_distiller(name = "Mean Weekly Incidence", 
-                       palette = "Reds", 
-                       direction = 1) +
-  ggtitle("March 30 - April 5") +
-  theme_tufte() +
-  theme(axis.text = element_blank(),
-        legend.position = "bottom",
-        plot.margin = margin(0, 0, 0, 0, "cm")) +
-  geom_sf_text(label = "Madrid", 
-               x = madrid_xy[1] - 4.9, 
-               y = madrid_xy[2] + 0.6,
-               family = "serif") +
-  geom_segment(x = madrid_xy[1] - 3.4, 
-               y = madrid_xy[2] + 0.5, 
-               xend = madrid_xy[1], 
-               yend = madrid_xy[2])
-
-week15.plot <- covid19_spain %>%
-  filter(CCAA != "Canarias") %>%
-  group_by(province, week = isoweek(Date)) %>% 
-  summarise(mean_weekly_incidence = mean(Incidence)) %>%
-  filter(week == 15) %>%
-  ggplot() +
-  geom_sf(aes(fill = mean_weekly_incidence)) +
-  scale_fill_distiller(name = "Mean Weekly Incidence", 
-                       palette = "Reds", 
-                       direction = 1) +
-  ggtitle("April 6 - April 11") +
-  theme_tufte() +
-  theme(axis.text = element_blank(),
-        legend.position = "bottom",
-        plot.margin = margin(0, 0, 0, 0, "cm")) +
-  geom_sf_text(label = "Madrid", 
-               x = madrid_xy[1] - 4.9, 
-               y = madrid_xy[2] + 0.6,
-               family = "serif") +
-  geom_segment(x = madrid_xy[1] - 3.4, 
-               y = madrid_xy[2] + 0.5, 
-               xend = madrid_xy[1], 
-               yend = madrid_xy[2])
-
-grid.arrange(week11.plot, week12.plot, week13.plot, week14.plot, week15.plot, nrow = 3)
-```
-
-To visualize the distribution of temperature and humidity we aggregate the provinces by Autonomous Community. In Figure \ref{fig:descriptives-temperature} the communities have been sorted by latitude, so that Principado de Asturias is the northernmost community, and Canarias the southernmost. There is a relatively wide range of values both within and between provinces over the 30 day period examined. The top panel of the figure shows the distribution of mean temperature. The lowest mean temperature for a community on any given day is 2.8C, and the highest is 22.4C for a range of approximately 20 degrees. Likewise, there is a great deal of variability in humidity, as seen in the bottom panel of the figure, where the lowest mean humidity for any community is 48.3 and the highest is 99.6. The actual values for the provinces display somewhat more variability even.  
-```{r descriptives-temperature, echo = FALSE, fig.height=7, fig.cap="\\label{fig:descriptives-temperature} Distribution of mean temperatures and humidities in the Autonomous Communities in Spain between March 12, 2020 and April 11, 2020. The Autonomous Communities have been sorted by latitude, with communities to the left being the northermost, and to the right the southernmost"}
-# Summary of temperature by Autonomous Community
-temp.summary <- covid19_spain %>% 
-  st_drop_geometry() %>%
-  group_by(CCAA, Date) %>%
-  summarize(Value = mean(Mean_Temp)) %>%
-  mutate(Variable = "Mean Temperature in Community")
-  
-# Summary of humidity by Autonomous Community
-humidity.summary <- covid19_spain %>% 
-  st_drop_geometry() %>%
-  group_by(CCAA, Date) %>%
-  summarize(Value = mean(Humidity)) %>%
-  mutate(Variable = "Mean Humidity in Community")
-
-# Bind tables
-env.summary <- rbind(temp.summary, humidity.summary) %>%
-  mutate(Variable = factor(Variable, 
-                           levels = c("Mean Temperature in Community",
-                                      "Mean Humidity in Community")))
-
-# Plot
-ggplot(data = env.summary, 
-       aes(x = CCAA,
-           y = Value)) +
-  geom_boxplot() +
-  theme_tufte() +
-  theme(axis.text.x = element_text(angle = 90)) +
-  xlab("Autonomous Community (sorted from north to south)") +
-  ylab("Value") +
-  facet_wrap(~ Variable, nrow = 2, 
-             scales = "free_y")
-```
-
-In addition to the two key environmental variables that are the focus of this research, we consider as controls the economic and demographic variables variables shown in  Table \ref{tab:descriptive-statistics}. The descriptive statistics as well as the sources of the data can be found there. 
 ```{r descriptive-statistics, echo=FALSE}
 data.frame(Variable = c("SARS-19 Incidence",
                         "GDPpc", 
@@ -335,44 +177,125 @@ data.frame(Variable = c("SARS-19 Incidence",
   column_spec(7, width = "15em")
 ```
 
-```{r control-map, echo=FALSE, fig.height= 9, fig.cap="\\label{fig:control-map}Spatial distribution of control variables by province (maps omits Islas Canarias)"}
-gdppc.plot <- provinces_spain %>%
-  filter(CCAA != "Canarias") %>%
-  ggplot() +
-  geom_sf(aes(fill = GDPpc)) +
-  scale_fill_distiller(name = "GDP per capita", 
-                       palette = "Blues", 
-                       direction = 1) +
-  theme_tufte() +
-  theme(axis.text = element_blank(),
-        legend.position = "bottom")
-
-# Older adults:
-older.plot <- covid19_spain %>% 
-  filter(CCAA != "Canarias") %>%
-  ggplot() +
-  geom_sf(aes(fill = as.numeric(Older))) +
-  scale_fill_distiller(name = "Percentage of older adults", 
-                       palette = "Blues", 
-                       direction = 1) +
-  theme_tufte() +
-  theme(axis.text = element_blank(),
-        legend.position = "bottom")
-
-# Population density:
-density.plot <- covid19_spain %>% 
-  filter(CCAA != "Canarias") %>%
-  ggplot() +
-  geom_sf(aes(fill = as.numeric(Density))) +
-  scale_fill_distiller(name = "Population Density", 
-                       palette = "Blues", 
-                       direction = 1) +
-  theme_tufte() +
-  theme(axis.text = element_blank(),
-        legend.position = "bottom")
-
-grid.arrange(gdppc.plot, older.plot, density.plot, nrow = 3)
+```{r descriptives-incidence, eval=FALSE, echo=FALSE, fig.cap="\\label{fig:descriptives-incidence}Incidence of COVID-19 by date by province"}
+ggplot(data = covid19_spain, aes(x = Date, y = Incidence, group = province)) +
+  geom_line(alpha = 0.5) +
+  theme_tufte()
 ```
+
+```{r weekly-average-incidence-map, echo=FALSE, fig.height= 9, fig.cap="\\label{fig:weekly-average-incidence-map}Mean weekly incidence of COVID-19 by province, in reported cases by 100,000 people"}
+week11.plot <- covid19_spain %>%
+  filter(CCAA != "Canarias") %>%
+  group_by(province, week = isoweek(Date)) %>% 
+  summarise(mean_weekly_incidence = mean(Incidence)) %>%
+  filter(week == 11) %>%
+  ggplot() +
+  geom_sf(aes(fill = mean_weekly_incidence)) +
+  scale_fill_distiller(name = "Mean Weekly Incidence", 
+                       palette = "Reds", 
+                       direction = 1) +
+  ggtitle("March 13 - March 15") +
+  theme_tufte() +
+  theme(axis.text = element_blank(),
+        legend.position = "bottom",
+        plot.margin = margin(0, 0, 0, 0, "cm"))
+
+week12.plot <- covid19_spain %>%
+  filter(CCAA != "Canarias") %>%
+  group_by(province, week = isoweek(Date)) %>% 
+  summarise(mean_weekly_incidence = mean(Incidence)) %>%
+  filter(week == 12) %>%
+  ggplot() +
+  geom_sf(aes(fill = mean_weekly_incidence)) +
+  scale_fill_distiller(name = "Mean Weekly Incidence", 
+                       palette = "Reds",
+                       direction = 1) +
+  ggtitle("March 16 - March 22") +
+  theme_tufte() +
+  theme(axis.text = element_blank(),
+        legend.position = "bottom",
+        plot.margin = margin(0, 0, 0, 0, "cm"))
+
+week13.plot <- covid19_spain %>%
+  filter(CCAA != "Canarias") %>%
+  group_by(province, week = isoweek(Date)) %>% 
+  summarise(mean_weekly_incidence = mean(Incidence)) %>%
+  filter(week == 13) %>%
+  ggplot() +
+  geom_sf(aes(fill = mean_weekly_incidence)) +
+  scale_fill_distiller(name = "Mean Weekly Incidence", 
+                       palette = "Reds", 
+                       direction = 1) +
+  ggtitle("March 23 - March 29") +
+  theme_tufte() +
+  theme(axis.text = element_blank(),
+        legend.position = "bottom",
+        plot.margin = margin(0, 0, 0, 0, "cm"))
+
+week14.plot <- covid19_spain %>%
+  filter(CCAA != "Canarias") %>%
+  group_by(province, week = isoweek(Date)) %>% 
+  summarise(mean_weekly_incidence = mean(Incidence)) %>%
+  filter(week == 14) %>%
+  ggplot() +
+  geom_sf(aes(fill = mean_weekly_incidence)) +
+  scale_fill_distiller(name = "Mean Weekly Incidence", 
+                       palette = "Reds", 
+                       direction = 1) +
+  ggtitle("March 30 - April 5") +
+  theme_tufte() +
+  theme(axis.text = element_blank(),
+        legend.position = "bottom",
+        plot.margin = margin(0, 0, 0, 0, "cm"))
+
+week15.plot <- covid19_spain %>%
+  filter(CCAA != "Canarias") %>%
+  group_by(province, week = isoweek(Date)) %>% 
+  summarise(mean_weekly_incidence = mean(Incidence)) %>%
+  filter(week == 15) %>%
+  ggplot() +
+  geom_sf(aes(fill = mean_weekly_incidence)) +
+  scale_fill_distiller(name = "Mean Weekly Incidence", 
+                       palette = "Reds", 
+                       direction = 1) +
+  ggtitle("April 6 - April 11") +
+  theme_tufte() +
+  theme(axis.text = element_blank(),
+        legend.position = "bottom",
+        plot.margin = margin(0, 0, 0, 0, "cm"))
+
+grid.arrange(week11.plot, week12.plot, week13.plot, week14.plot, week15.plot, nrow = 3)
+```
+
+```{r descriptives-temperature, echo = FALSE, fig.cap="\\label{fig:descriptives-temperature} Distribution of temperatures in the Autonomous Communities in Spain between March 12, 2020 and April 11, 2020. The Autonomous Communities have been sorted by latitude, with communities to the left being the northermost, and to the right the southernmost"}
+# Boxplots of temperatures
+covid19_spain %>% 
+  group_by(CCAA, Date) %>%
+  summarize(Mean_Temp = mean(Mean_Temp)) %>%
+  ggplot(aes(x = CCAA, y = Mean_Temp)) +
+  geom_boxplot() +
+  theme_tufte() +
+  theme(axis.text.x = element_text(angle = 90)) +
+  xlab("Autonomous Community (sorted from north to south)") +
+  ylab("Mean Temperature in the Community")
+```
+
+```{r descriptives-humidity, echo = FALSE, fig.cap="\\label{fig:descriptives-humidity} Distribution of humidity in the Autonomous Communities in Spain between March 12, 2020 and April 11, 2020. The Autonomous Communities have been sorted by latitude, with communities to the left being the northermost, and to the right the southernmost"}
+# Boxplots of humidity
+covid19_spain %>% 
+  group_by(CCAA, Date) %>%
+  summarize(Mean_Humidity = mean(Humidity)) %>%
+  ggplot(aes(x = CCAA, y = Mean_Humidity)) +
+  geom_boxplot() +
+  theme_tufte() +
+  theme(axis.text.x = element_text(angle = 90)) +
+  xlab("Autonomous Community (sorted from north to south)") +
+  ylab("Mean Humidity in the Community")
+```
+
+Methods: Spatial SUR
+===================
+
 
 Our data set include information about the diary number of diagnostic cases of COVID-19 in Spain \footnote{cases tested} at provincial level (NUTIII in eurostat terminology) from March 13th to April 11th (30 days and 50 spatial units). The Spanish National Goberment publish periodic information at regional level (NUTII) but the information is also available at provincial level in a collaborative project \footnote{\url{https://code.montera34.com:4443/numeroteca/covid19/-/blob/master/README_providencialdata19.md}}. This information is recopilad from several sources, mainly in the official web pages of the Spanish regional goverments. Additionally two sets of explicative variables have been considered. The first one, are refered to the provincial population estructure (H/M; Edad_media, Density). The second one is a set of climatic variables (Temperature/Humidity). Table \ref{table:Description} descriptive information.
 
@@ -412,11 +335,9 @@ Lag-Hum & Mean diary humidity between days x-12 and x-5 & MAPA \\
 \end{center}
 \end{table}
 
-Some questions are important to point out. Is not evident present a diary association between the temprature (resp. humidity) with declarate case. There is evidences (ref) that a time lag is necessary between the day that the individuo inffect and the case is diagnosticate 
+Some questions are important to point out. Is not evident present a diary association between the temprature (resp. humidity) with declarate case. There is evidences (ref) that a time lag is necessary between the day that the individuo inffect and the case is diagnosticate  
 
 
-Methods: Spatial SUR
-===================
 
 # The econometric model
 
@@ -469,7 +390,7 @@ where A =$I_{TN}-\bf{\Lambda} \otimes W$ with $\bf{\Lambda} = diag(\lambda_1,...
 
 This specification assumes that incidence in a province ($y_st$) at time $t$ is partially determined by the weighted average ($Wy_{st}$) of incidence in neighbouring provinces. Parameters of spatial dependence are estimated for each time period $\lambda_t$ and identifies the intensity and the sign of the impacts of neighbourhood. It is possible test the null hypotheis of identtical levels of spatial dependence ($\lambda_i=\lambda_j, \forall i,j$). The correspond Wald test is available in the R package **spsur** 
 
-The SUR-SLM model can be estimated by maximum likelihood (@lopez2014) or instrumental variables (@Minguez2019). We considerer this methodology to estimate the model.
+The SUR-SLM model can be estimated by maximum likelihood (@lopez2014) or instrumental variables (@Minguez2019). We considerer this methodology to estimate the model. 
 
 Analysis and Results
 ===================
