@@ -72,9 +72,8 @@ provinces_spain <- provinces_spain %>%
 
 # Join provincial data to incidence data and convert to simple features:
 covid19_spain <- covid19_spain %>% 
-  left_join(provinces_spain,
-            by = c("province", "CCAA", "ID_INE")) %>%
-  select(-geometry)
+  left_join(provinces_spain %>% st_drop_geometry(),
+            by = c("province", "CCAA", "ID_INE"))
 ```
 
 ```{r sort-communities-by-latitude, include=FALSE}
