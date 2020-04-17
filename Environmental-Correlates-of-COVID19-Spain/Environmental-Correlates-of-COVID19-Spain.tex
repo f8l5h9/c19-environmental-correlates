@@ -121,18 +121,18 @@ Prof.~Moraes Rego, 1235 - Cidade Universitária, Recife, PE, CEP
   seasonality associated with variations in temperature and humidity. In
   this research, we address this question by means of a spatial analysis
   of the incidence of COVID-19 in the provinces in Spain. Use of a spatial
-  SUR approach allows us to model the incidence of reported cases of the
-  disease per 100,000 population, as a function of temperature and
-  humidity, while controlling for GDP per capita, population density,
-  percentage of older adults in the population, and presence of mass
-  transit systems. Our results indicate that incidence of the disease is
-  lower at higher temperatures. The evidence with respect to humidity is
-  more mixed, with coefficients for this variable that are significant in
-  only some equations. Our control variables also yield interesting
-  insights, as population density and percentage of older adults display
-  negative associations with incidence of COVID-19, whereas the presence
-  of mass transit systems in the province is associated with a greater
-  incidence of the disease.
+  Seemingly Unrelated Regressions (SUR) approach allows us to model the
+  incidence of reported cases of the disease per 100,000 population, as a
+  function of temperature and humidity, while controlling for GDP per
+  capita, population density, percentage of older adults in the
+  population, and presence of mass transit systems. Our results indicate
+  that incidence of the disease is lower at higher temperatures. The
+  evidence with respect to humidity is more mixed, with coefficients for
+  this variable that are significant in only some equations. Our control
+  variables also yield interesting insights, as population density and
+  percentage of older adults display negative associations with incidence
+  of COVID-19, whereas the presence of mass transit systems in the
+  province is associated with a greater incidence of the disease.
   \end{abstract}
   
  \end{frontmatter}
@@ -223,18 +223,20 @@ We combine data on reported cases of the disease with metereological
 information, to create a spatio-temporal dataset covering a period of 30
 days. We then join this dataset with provincial-level economic and
 demographic information to act as controls to our key environmental
-variables. These data are analyzed using a spatial SUR approach, which
-allows us to account for residual spatial autocorrelation. The results
-provide evidence of the effect of temperature on the incidence of
-COVID-19, as \textbf{NOTE ABOUT THE MAGNITUDE OF THE EFFECT}. The
-evidence concerning humidity is more mixed: while the direction of the
-effect is negative, as anticipated, the coefficients for this variable
-are only significant in some of equations in the system. Our control
-variables also provide some intriguing insights. The results of this
-analysis provide support to the hypothesis of seasonality of the novel
-SARS-CoV2, and should be of interest to public health officials and
-policy makers wrestling with the question of the trajectory of the
-pandemic.
+variables. These data are analyzed using a spatial Seemingly Unrelated
+Regressions (SUR) approach, which allows us to account for spatial
+autocorrelation.
+
+The results provide evidence of the effect of temperature on the
+incidence of COVID-19, as \textbf{NOTE ABOUT THE MAGNITUDE OF THE
+EFFECT}. The evidence concerning humidity is more mixed: while the
+direction of the effect is negative, as anticipated, the coefficients
+for this variable are only significant in some of equations in the
+system. Our control variables also provide some intriguing insights. The
+results of this analysis provide support to the hypothesis of
+seasonality of the novel SARS-CoV2, and should be of interest to public
+health officials and policy makers wrestling with the question of the
+trajectory of the pandemic.
 
 Please note that this paper is prepared as a reproducible research
 document. The source R Markdown document, as well as all data and code
@@ -298,7 +300,7 @@ descriptive statistics and the provencance of the data.
 \caption{\label{tab:descriptive-statistics}\label{tab:descriptive-statistics}Descriptive statistics}
 \centering
 \resizebox{\linewidth}{!}{
-\begin{tabular}[t]{l>{\raggedright\arraybackslash}p{15em}rrrr>{\raggedright\arraybackslash}p{6em}}
+\begin{tabular}[t]{l>{\raggedright\arraybackslash}p{15em}rrrr>{\raggedright\arraybackslash}p{5em}}
 \toprule
 Variable & Note & Min & Mean & Max & SD & Source\\
 \midrule
@@ -321,14 +323,13 @@ Humidity & Relative humidity in province by date & 2.00 & 77.82 & 100.00 & 10.37
 \hypertarget{methods-spatial-sur}{%
 \section{Methods: Spatial SUR}\label{methods-spatial-sur}}
 
-\hypertarget{the-econometric-model}{%
-\section{The econometric model}\label{the-econometric-model}}
+Seemingly Unrelated Regressions are used in the context of\ldots{}
 
-The baseline model propouse in this paper is a classical SUR model
-without spatial effects (from here, SUR-SIM). The classical expresion
-for this model in stacked form is,
+The classical SUR model without spatial effects (from here, SUR-SIM) is
+a stack of equations as follows:
 
 \begin{equation}
+\label{eq:sur-sim}
 \begin{bmatrix}
 y_1 \\ y_2 \\ \vdots \\ y_T
 \end{bmatrix}
@@ -344,55 +345,61 @@ X_1 & 0 & \cdots & 0 \\ 0 & X_2 & \cdots & 0 \\ \vdots & \vdots & \ddots & \vdot
 \begin{bmatrix}
 \epsilon_1 \\ \epsilon_2 \\ \vdots \\ \epsilon_T
 \end{bmatrix}
-\label{eq:sur-sim}
 \end{equation}
 
-where \(y_{t}=(y_{1t},...,y_{Nt})\) is a \(N \times 1\) vector, and in
-our case \(y_{st}\) is the incidence ratio in the province \(s\)
-(\(s=1,...,N\)) the day \(t\) \((t=1,...,T)\); \(X_t=(X^1,...,X^{k_t})\)
-is a \(N \times k_t\) matrix of the \(k_t\) independent variables,
-\(X_i=(X^i_{st})\); \(\beta_t=(\beta_{1t},...,\beta_{Nt})\) is a vector
-of coefficients and \(\epsilon_t=(\epsilon_{1t},...,\epsilon_{Nt})\) is
-the error vector.
+\noindent where \(y_{t}=(y_{1t},...,y_{Nt})\) is a \(N \times 1\)
+vector, and in our case \(y_{st}\) is the incidence ratio in the
+province \(s\) (\(s=1,...,N\)) the day \(t\) \((t=1,...,T)\);
+\(X_t=(X^1,...,X^{k_t})\) is a \(N \times k_t\) matrix of the \(k_t\)
+independent variables, \(X_i=(X^i_{st})\);
+\(\beta_t=(\beta_{1t},...,\beta_{Nt})\) is a vector of coefficients and
+\(\epsilon_t=(\epsilon_{1t},...,\epsilon_{Nt})\) is the vector of
+residuals.
 
-the more relevant characteristic in SUR model,is the dependence among
-error vector,
+The more relevant characteristic of a SUR model is the dependence
+structure among the vectors of residuals, namely:
 
 \begin{equation}
-E[\epsilon_t \epsilon'_{t'}]=\sigma_{tt'}
 \label{eq:sur-err}
+E[\epsilon_t \epsilon'_{t'}]=\sigma_{tt'}
 \end{equation}
 
-Note that this especification is highly flexible, allowing changes in
-the coefficients \(\beta_{it}\) in order to modulate the effect of
+Note that this specification is very flexible, in that it allows changes
+in the coefficients \(\beta_{it}\) in order to modulate the effect of
 \(X^i_{.t}\) on \(y_t\). This flexibility can be reduced and it is
-posible to impose restrinctions considerong time constant some \(\beta\)
-coefficients. In this case, we can reformulate the coefficients
-expression of
-\(\beta_t=(\beta_{1},...,\beta_{r},\beta_{r+1},...,\beta_{Nt})\)
+posible to impose restrinctions considering some \(\beta\) coefficients
+as being constant over time. In this case, we can reformulate the
+coefficients expression of
+\(\beta_t = (\beta_{1}, \cdots, \beta_{r-1}, \beta_{r}, \beta_{r+1}, \cdots, \beta_{Nt})\)
 considering the first \(r\) coefficients contanst.
 
-The equation (\ref{eq:sur-sim}) can be rewrite in compact form,
+Equation \ref{eq:sur-sim}) can be rewriten in compact form:
+
 \begin{equation}
 y = X \beta + \epsilon
-\end{equation} where\ldots.
+\end{equation}
 
-Like in case of cross-section, it is possible identify spatial
-autocorrelation in the residuals of (\ref{eq:sur-sim}) and several
-Lagrange Multipliers tests has been develop to test the null of spatial
-independence (see López et al. (2014)). In case of reject the null
-alternative several specifications has been propose to include spatial
-effects (Anselin (1988), see also Anselin (2016)). In this paper we
-consider the specific spatial SUR model tahr incorpore a spatial lag of
-the dependent variable as an explanatory factor. The stack expresion for
-the spatial lag SUR model (SUR-SLM),
+\noindent where\ldots.
+
+As is the case of cross-sectional data, it is possible identify spatial
+autocorrelation in the residuals of Model \ref{eq:sur-sim}, and several
+Lagrange Multipliers tests have been developed to test the null
+hypothesis of spatial independence (see López et al., 2014). When the
+null hypothesis is rejected, there are alternative several
+specifications that have been propose to include spatial effects
+(Anselin, 1988, see also 2016). In this paper we consider a spatial SUR
+model that incorporates a spatial lag of the dependent variable as an
+explanatory factor. The stack expresion for the spatial lag SUR model
+(SUR-SLM),
 
 \begin{equation}
+\label{eq:sur-slm}
 \bf{A}y = X \beta + \epsilon \\
 \epsilon =N(0,\Omega)
-\label{eq:sur-slm}
-\end{equation} where A =\(I_{TN}-\bf{\Lambda} \otimes W\) with
-\(\bf{\Lambda} = diag(\lambda_1,...,\lambda_T)\).
+\end{equation}
+
+\noindent where A =\(I_{TN}-\bf{\Lambda} \otimes W\) with
+\(\bf{\Lambda} = diag(\lambda_1, \cdots, \lambda_T)\).
 
 This specification assumes that incidence in a province (\(y_st\)) at
 time \(t\) is partially determined by the weighted average (\(Wy_{st}\))
@@ -403,9 +410,8 @@ test the null hypotheis of identtical levels of spatial dependence
 (\(\lambda_i=\lambda_j, \forall i,j\)). The correspond Wald test is
 available in the R package \textbf{spsur}
 
-The SUR-SLM model can be estimated by maximum likelihood (López et al.
-(2014)) or instrumental variables (Mínguez et al. (2019)). We considerer
-this methodology to estimate the model.
+The SUR-SLM model can be estimated using maximum likelihood (López et
+al. (2014)) or instrumental variables (Mínguez et al. (2019)).
 
 \hypertarget{analysis-and-results}{%
 \section{Analysis and Results}\label{analysis-and-results}}

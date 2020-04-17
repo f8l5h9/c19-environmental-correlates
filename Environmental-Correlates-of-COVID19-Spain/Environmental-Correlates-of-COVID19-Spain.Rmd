@@ -74,7 +74,7 @@ provinces_spain <- provinces_spain %>%
 covid19_spain <- covid19_spain %>% 
   left_join(provinces_spain,
             by = c("province", "CCAA", "ID_INE")) %>%
-  st_as_sf()
+  select(-geometry)
 ```
 
 ```{r sort-communities-by-latitude, include=FALSE}
@@ -223,7 +223,6 @@ X_1 & 0 & \cdots & 0 \\ 0 & X_2 & \cdots & 0 \\ \vdots & \vdots & \ddots & \vdot
 \begin{bmatrix}
 \epsilon_1 \\ \epsilon_2 \\ \vdots \\ \epsilon_T
 \end{bmatrix}
-\label{eq:sur-sim}
 \end{equation}
 
 \noindent where $y_{t}=(y_{1t},...,y_{Nt})$ is a $N \times 1$ vector, and in our case $y_{st}$ is the incidence ratio in the province $s$ ($s=1,...,N$) the day $t$ $(t=1,...,T)$; $X_t=(X^1,...,X^{k_t})$ is a $N \times k_t$ matrix of the $k_t$ independent variables, $X_i=(X^i_{st})$; $\beta_t=(\beta_{1t},...,\beta_{Nt})$ is a vector of coefficients and $\epsilon_t=(\epsilon_{1t},...,\epsilon_{Nt})$ is the vector of residuals. 
@@ -231,8 +230,8 @@ X_1 & 0 & \cdots & 0 \\ 0 & X_2 & \cdots & 0 \\ \vdots & \vdots & \ddots & \vdot
 The more relevant characteristic of a SUR model is the dependence structure among the vectors of residuals, namely:
 
 \begin{equation}
-E[\epsilon_t \epsilon'_{t'}]=\sigma_{tt'}
 \label{eq:sur-err}
+E[\epsilon_t \epsilon'_{t'}]=\sigma_{tt'}
 \end{equation} 
 
 Note that this specification is very flexible, in that it allows changes in the coefficients $\beta_{it}$ in order to modulate the effect of $X^i_{.t}$ on $y_t$. This flexibility can be reduced and it is posible to impose restrinctions considering some $\beta$ coefficients as being constant over time. In this case, we can reformulate the coefficients expression of $\beta_t = (\beta_{1}, \cdots, \beta_{r-1}, \beta_{r}, \beta_{r+1}, \cdots, \beta_{Nt})$ considering the first $r$ coefficients contanst.
@@ -251,7 +250,6 @@ As is the case of cross-sectional data, it is possible identify spatial autocorr
 \label{eq:sur-slm}
 \bf{A}y = X \beta + \epsilon \\
 \epsilon =N(0,\Omega)
-\label{eq:sur-slm}
 \end{equation}
 
 \noindent where A =$I_{TN}-\bf{\Lambda} \otimes W$ with $\bf{\Lambda} = diag(\lambda_1, \cdots, \lambda_T)$.
@@ -276,8 +274,11 @@ madrid_xy <-  st_centroid(provinces_spain %>% filter(province == "Madrid")) %>% 
 week11.plot <- covid19_spain %>%
   filter(CCAA != "Canarias") %>%
   group_by(province, week = isoweek(Date)) %>% 
-  summarise(mean_weekly_incidence = mean(Incidence)) %>%
+  summarise(ID_INE = first(ID_INE), mean_weekly_incidence = mean(Incidence)) %>%
   filter(week == 11) %>%
+  left_join(provinces_spain,
+            by = c("ID_INE")) %>%
+  st_as_sf() %>%
   ggplot() +
   geom_sf(aes(fill = mean_weekly_incidence)) +
   scale_fill_distiller(name = "Mean Weekly Incidence", 
@@ -301,8 +302,11 @@ week11.plot <- covid19_spain %>%
 week12.plot <- covid19_spain %>%
   filter(CCAA != "Canarias") %>%
   group_by(province, week = isoweek(Date)) %>% 
-  summarise(mean_weekly_incidence = mean(Incidence)) %>%
+  summarise(ID_INE = first(ID_INE), mean_weekly_incidence = mean(Incidence)) %>%
   filter(week == 12) %>%
+  left_join(provinces_spain,
+            by = c("ID_INE")) %>%
+  st_as_sf() %>%
   ggplot() +
   geom_sf(aes(fill = mean_weekly_incidence)) +
   scale_fill_distiller(name = "Mean Weekly Incidence", 
@@ -319,8 +323,11 @@ week12.plot <- covid19_spain %>%
 week13.plot <- covid19_spain %>%
   filter(CCAA != "Canarias") %>%
   group_by(province, week = isoweek(Date)) %>% 
-  summarise(mean_weekly_incidence = mean(Incidence)) %>%
+  summarise(ID_INE = first(ID_INE), mean_weekly_incidence = mean(Incidence)) %>%
   filter(week == 13) %>%
+  left_join(provinces_spain,
+            by = c("ID_INE")) %>%
+  st_as_sf() %>%
   ggplot() +
   geom_sf(aes(fill = mean_weekly_incidence)) +
   scale_fill_distiller(name = "Mean Weekly Incidence", 
@@ -343,8 +350,11 @@ week13.plot <- covid19_spain %>%
 week14.plot <- covid19_spain %>%
   filter(CCAA != "Canarias") %>%
   group_by(province, week = isoweek(Date)) %>% 
-  summarise(mean_weekly_incidence = mean(Incidence)) %>%
+  summarise(ID_INE = first(ID_INE), mean_weekly_incidence = mean(Incidence)) %>%
   filter(week == 14) %>%
+  left_join(provinces_spain,
+            by = c("ID_INE")) %>%
+  st_as_sf() %>%
   ggplot() +
   geom_sf(aes(fill = mean_weekly_incidence)) +
   scale_fill_distiller(name = "Mean Weekly Incidence", 
@@ -367,8 +377,11 @@ week14.plot <- covid19_spain %>%
 week15.plot <- covid19_spain %>%
   filter(CCAA != "Canarias") %>%
   group_by(province, week = isoweek(Date)) %>% 
-  summarise(mean_weekly_incidence = mean(Incidence)) %>%
+  summarise(ID_INE = first(ID_INE), mean_weekly_incidence = mean(Incidence)) %>%
   filter(week == 15) %>%
+  left_join(provinces_spain,
+            by = c("ID_INE")) %>%
+  st_as_sf() %>%
   ggplot() +
   geom_sf(aes(fill = mean_weekly_incidence)) +
   scale_fill_distiller(name = "Mean Weekly Incidence", 
@@ -395,14 +408,12 @@ To visualize the distribution of temperature and humidity we aggregate the provi
 ```{r descriptives-temperature, echo = FALSE, fig.height=7, fig.cap="\\label{fig:descriptives-temperature} Distribution of mean temperatures and humidities in the Autonomous Communities in Spain between March 12, 2020 and April 11, 2020. The Autonomous Communities have been sorted by latitude, with communities to the left being the northermost, and to the right the southernmost"}
 # Summary of temperature by Autonomous Community
 temp.summary <- covid19_spain %>% 
-  st_drop_geometry() %>%
   group_by(CCAA, Date) %>%
   summarize(Value = mean(Mean_Temp)) %>%
   mutate(Variable = "Mean Temperature in Community")
   
 # Summary of humidity by Autonomous Community
 humidity.summary <- covid19_spain %>% 
-  st_drop_geometry() %>%
   group_by(CCAA, Date) %>%
   summarize(Value = mean(Humidity)) %>%
   mutate(Variable = "Mean Humidity in Community")
@@ -439,7 +450,7 @@ gdppc.plot <- provinces_spain %>%
         legend.position = "bottom")
 
 # Older adults:
-older.plot <- covid19_spain %>% 
+older.plot <- provinces_spain %>% 
   filter(CCAA != "Canarias") %>%
   ggplot() +
   geom_sf(aes(fill = as.numeric(Older))) +
@@ -451,7 +462,7 @@ older.plot <- covid19_spain %>%
         legend.position = "bottom")
 
 # Population density:
-density.plot <- covid19_spain %>% 
+density.plot <- provinces_spain %>% 
   filter(CCAA != "Canarias") %>%
   ggplot() +
   geom_sf(aes(fill = as.numeric(Density))) +
@@ -469,7 +480,6 @@ Figure \ref{fig:daily-correlations} shows the distribution of daily correlations
 
 ```{r daily-correlations, echo=FALSE, fig.cap="\\label{fig:daily-correlations}Distribution of daily correlations of the independent variables with daily incidence of COVID-19 (all variables have been log-transformed)"}
 covid19_spain %>% 
-  st_drop_geometry() %>% # drop geometry to avoid slowing the calculations
   group_by(Date) %>%
   summarize(Older = cor(log(Older), log(Incidence)),
             GDPpc = cor(log(GDPpc), log(Incidence)),
@@ -503,7 +513,6 @@ covid19_spain %>%
 ```{r data-preparation-for-modelling, include=FALSE}
 # Organize data for SUR modelling 
 GPanel <- plm::pdata.frame(covid19_spain %>%
-                             st_drop_geometry() %>%
                              select(province, 
                                     Date,
                                     Incidence, 
