@@ -275,6 +275,49 @@ covid19_spain %>%
 Methods: Spatial SUR
 ===================
 
+
+Our data set include information about the diary number of diagnostic cases of COVID-19 in Spain \footnote{cases tested} at provincial level (NUTIII in eurostat terminology) from March 13th to April 11th (30 days and 50 spatial units). The Spanish National Goberment publish periodic information at regional level (NUTII) but the information is also available at provincial level in a collaborative project \footnote{\url{https://code.montera34.com:4443/numeroteca/covid19/-/blob/master/README_providencialdata19.md}}. This information is recopilad from several sources, mainly in the official web pages of the Spanish regional goverments. Additionally two sets of explicative variables have been considered. The first one, are refered to the provincial population estructure (H/M; Edad_media, Density). The second one is a set of climatic variables (Temperature/Humidity). Table \ref{table:Description} descriptive information.
+
+\begin{table}
+\begin{center}
+\caption{Decription of variables}
+\label{table:Description}
+\begin{tabular}{llc}
+\hline
+Variable & Description & Source \\
+\hline
+\hline
+\multicolumn{3}{l}{Dependent variable} \\
+\hline
+Inc & Incidence by 100,000 inhabitans & Datalista \\
+\hline
+\hline
+\multicolumn{3}{l}{Independent variables} \\
+\hline
+Structure of population & & \\
+\hline
+Male2Female & Ratio Men/Women & INE \\
+MedianAge & Median Age & INE \\
+Transit & Dicotomic Variable (0/1) if masive transport (metro/subway) & INE \\
+\hline
+Climatic variables  & & \\
+\hline
+Lag-Tem & Mean diary temperature between days x-12 and x-5 & AEMET \\
+Lag-Hum & Mean diary humidity between days x-12 and x-5 & MAPA \\
+\hline
+\multicolumn{3}{l}{ MAPA: Ministerio de Agricultura, Pesca y Alimentación 
+\url{http://eportal.mapa.gob.es}} \\
+\multicolumn{3}{l}{ INE
+\url{https://www.ine.es/}}
+
+\end{tabular}
+\end{center}
+\end{table}
+
+Some questions are important to point out. Is not evident present a diary association between the temprature (resp. humidity) with declarate case. There is evidences (ref) that a time lag is necessary between the day that the individuo inffect and the case is diagnosticate  
+
+
+
 # The econometric model
 
 The baseline model propouse in this paper is a classical SUR model without spatial effects (from here, SUR-SIM). The classical expresion for this model in stacked form is,
