@@ -125,7 +125,7 @@ Please note that this paper is prepared as a reproducible research document. The
 
 >> Include link to repository
 
-Context and Data
+Context, Data, and Methods
 ============
 
 ## Covid-19 in Spain
@@ -142,9 +142,9 @@ Some questions are important to point out. Is not evident present a diary associ
 
 ## Sources of Data
 
-Our dataset includes information about the daily number of cases of COVID-19 reported in Spain \footnote{cases tested} at the provincial level (NUTIII in eurostat terminology) from March 13th to April 11th (30 days and 50 spatial units). The Spanish National Government publishes periodic updates at the regional level (NUTII) and the information is also released at the provincial level as part of a collaborative project \footnote{\url{https://code.montera34.com:4443/numeroteca/covid19/-/blob/master/README_providencialdata19.md}}. This information is compiled from several sources, mainly the official web pages of the Spanish regional goverments. In addition, we consider two sets of explanatory variables. The first one, and the focus of this research, is set of two environmental variables, namely temperature and humidity. The second set provides some relevant controls for multivariate analysis, and refers to economic and demographic attributes of the province. Table \ref{tab:descriptive-statistics} shows the descriptive statistics and the provencance of the data.
+Our dataset includes information about the daily number of cases of COVID-19 reported in Spain \footnote{cases tested} at the provincial level (NUTIII in eurostat terminology) from March 13th to April 11th (30 days and 50 spatial units). The Spanish National Government publishes periodic updates at the regional level (NUTII) and the information is also released at the provincial level as part of a collaborative project. This information is compiled from several sources, mainly the official web pages of the Spanish regional goverments. In addition, we consider two sets of explanatory variables. The first one, and the focus of this research, is set of two environmental variables, namely temperature and humidity. The second set provides some relevant controls for multivariate analysis, and refers to economic and demographic attributes of the province. Table \ref{tab:descriptive-statistics} shows the descriptive statistics and the provencance of the data.
 ```{r descriptive-statistics, echo=FALSE}
-data.frame(Variable = c("SARS-19 Incidence",
+data.frame(Variable = c("COVID-19 Incidence",
                         "GDPpc", 
                         "Older", 
                         "Population Density",
@@ -180,7 +180,7 @@ data.frame(Variable = c("SARS-19 Incidence",
                    sd(provinces_spain$Density),
                    sd(covid19_spain$Mean_Temp),
                    sd(covid19_spain$Humidity)),
-           Source = c("Datalista",
+           Source = c("Montera34",
                       "INE",
                       "INE",
                       "INE",
@@ -193,14 +193,13 @@ data.frame(Variable = c("SARS-19 Incidence",
   kable_styling(latex_options = c("striped", "scale_down")) %>%
   column_spec(2, width = "15em") %>%
   column_spec(7, width = "5em") %>%
-  footnote(general = c("Datalista: ", 
+  footnote(general = c("Montera34: https://code.montera34.com:4443/numeroteca/covid19/-/blob/master/README_providencialdata19.md", 
                        "INE (Instituto Nacional de Estadistica): https://www.ine.es/",
                        "AEMET (Agencia Estatal de Meteorologia): http://eportal.mapa.gob.es",
                        "MAPA (Ministerio de Agricultura, Pesca y Alimentacion): http://eportal.mapa.gob.es"))
 ```
 
-Methods: Spatial SUR
-===================
+## Methods: Spatial SUR
 
 Seemingly Unrelated Regressions are used in the context of...
 
