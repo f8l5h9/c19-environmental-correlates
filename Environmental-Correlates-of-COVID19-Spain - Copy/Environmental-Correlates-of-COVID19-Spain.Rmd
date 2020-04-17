@@ -111,11 +111,12 @@ From a small outbreak linked to a live animal market at the end of 2019 to a glo
 
 A salient question in the debate on how and when to ease social distancing measures is whether the virus will display seasonal variations. Earlier, diverse studies have shown the effect of temperature and humidity on the incidence of influenza [e.g., @Makinen2009cold; @Jaakkola2014decline; @Kudo2019low]. Jaakkola et al. [-@Jaakkola2014decline], for example, found that a decrease of temperature and absolute humidity precedes the onset of symptoms of influenza A and B viruses by 3 days in places where the temperature is low. After the 2002-2004 outbreak of SARS, researchers also began to investigate the relationship between these factors and SARS-CoV. In this way, Casanova et al. [-@Casanova2010effects] used two surrogates, namely the gastroenteritis (TGEV) and mouse hepatitis viruses (MHV), to find that virus inactivation was more rapid at temperatures of 20C than 4C, and at 40C than 20C; in terms of humidity, these researchers reported that survival of the virus was lower at moderate relative humidity levels. In a similar vein, but working directly with SARS-CoV, Chan et al. [-@Chan2011effects] found that viability of the virus was lost at temperatures higher than 38C and relative humidity superior to 95%. 
 
-While existing research on similar pathogens suggests that SARS-CoV is more stable and potentially easier to transmit in conditions of low temperature and low humidity, it is far from certain that this will also be the case with the novel SARS-CoV2. If such is the case, there is the possibility of easing restrictions to social contact as the weather warms; however, weeks or possibly months of costly measures could become undone if not, and the restrictions are lifted prematurely. Not surprisingly, this issue has triggered a lively debate. 
+While existing research on similar pathogens suggests that SARS-CoV is more stable and potentially easier to transmit in conditions of low temperature and low humidity, it is far from certain that this will also be the case with the novel SARS-CoV2. If such is the case, there is the possibility of easing restrictions to social contact as the weather warms; however, weeks or possibly months of costly measures could become undone if not, and the restrictions are lifted prematurely. Not surprisingly, given the stakes involved, this issue has already triggered a lively debate. 
 
-In this paper, we report results from a spatial analysis of incidence of COVID-19 in fifty provinces in Spain. Spain is one of the countries hardest hit by the virus, and enacted lockdown measures on March 16, 2020, in response to a rapidly growing outbreak of COVID-19. We combine data on reported cases of the disease with metereological information, to create a spatio-temporal dataset covering a period of 30 days. We then join this dataset with provincial-level economic and demographic information to act as controls to our key environmental variables. These data are analyzed using a spatial SUR approach, which allows us to account for residual spatial autocorrelation. 
+Some of what is thought about the possible seasonality of COVID-19 is based on analogies to the patterns of other known respiratory viruses. However, de Ángel Solá et al. [-@deangel2020weathering] note that "not all seasonal respiratory viruses experience the same spatiotemporal patterns" (section 4). This urges caution when extrapolating from known viruses, and indeed, the evidence in this respect is inconclusive. At a global scale, whereas de Ángel Solá et al. [-@deangel2020weathering] see less risk in the Caribean Basin, Coelho et al. [@Coelho2020exponential] warn that at least during the exponential phase, expansion of the virus is not driven by climate. Similarly, whereas Araujo and Naimi [-@Araujo2020spread] argue that spread of SARS-CoV2 will likely be constrained by climate, Harbert et al. [-@Harbert2020spatial] remain unconvinced that spatial modelling can currently discriminate the distribution of the disease on the basis of climate, at least in the United States. To further complicate matters, much of the relevant work has yet to be peer-reviewed and therefore is open to change (see for example the challenge of @Harbert2020spatial to @Araujo2020spread). In the United States, the National Academy of Sciences, Engineering, and Medicine was engaged by the Office of the Executive for guidance on this matter [see @National2020rapid]. Their conclusion summarizes the situation well (see p. 6): "Some limited data support a potential waning of cases in warmer and more humid seasons, yet none are without major limitations...Additional studies as the SARS-CoV-2 pandemic unfolds could shed more light on the effects of climate on transmission."
 
-The results provide persuasive evidence of the effect of temperature on the incidence of COVID-19, as **NOTE ABOUT THE MAGNITUDE OF THE EFFECT**. The evidence concerning humidity is more mixed: while the direction of the effect is negative, as anticipated, the coefficients for this variable are only significant in some of equations in the system. Our control variables also provide some intriguing insights. The results of this analysis provide support to the hypothesis of seasonality of the novel SARS-CoV2, and should be of interest to public health officials and policy makers wrestling with the question of the trajectory of the pandemic.
+With the above considerations in mind, our objective with this paper is to contribute to the knowledge basis regarding the spread of COVID-19 and the influence of environmental factors, particularly temperature and humidity. Hence, here we report results from a spatial analysis of incidence of COVID-19 in fifty provinces in Spain. Spain is one of the countries hardest hit by the virus, and enacted lockdown measures on March 16, 2020, in response to a rapidly growing outbreak of COVID-19. We combine data on reported cases of the disease with metereological information, to create a spatio-temporal dataset covering a period of 30 days. We then join this dataset with provincial-level economic and demographic information to act as controls to our key environmental variables. These data are analyzed using a spatial SUR approach, which allows us to account for residual spatial autocorrelation. 
+The results provide evidence of the effect of temperature on the incidence of COVID-19, as **NOTE ABOUT THE MAGNITUDE OF THE EFFECT**. The evidence concerning humidity is more mixed: while the direction of the effect is negative, as anticipated, the coefficients for this variable are only significant in some of equations in the system. Our control variables also provide some intriguing insights. The results of this analysis provide support to the hypothesis of seasonality of the novel SARS-CoV2, and should be of interest to public health officials and policy makers wrestling with the question of the trajectory of the pandemic.
 
 Please note that this paper is prepared as a reproducible research document. The source R Markdown document, as well as all data and code needed to reproduce/review/extend the analysis can be obtained from the following repository:
 
@@ -182,7 +183,7 @@ ggplot(data = covid19_spain, aes(x = Date, y = Incidence, group = province)) +
   theme_tufte()
 ```
 
-```{r weekly-average-incidence-map, echo=FALSE, fig.cap="\\{fig:weekly-average-incidence-map}Mean weekly incidence of COVID-19 by province, in reported cases by 100,000 people"}
+```{r weekly-average-incidence-map, echo=FALSE, fig.height= 9, fig.cap="\\label{fig:weekly-average-incidence-map}Mean weekly incidence of COVID-19 by province, in reported cases by 100,000 people"}
 week11.plot <- covid19_spain %>%
   filter(CCAA != "Canarias") %>%
   group_by(province, week = isoweek(Date)) %>% 
@@ -193,10 +194,11 @@ week11.plot <- covid19_spain %>%
   scale_fill_distiller(name = "Mean Weekly Incidence", 
                        palette = "Reds", 
                        direction = 1) +
+  ggtitle("March 13 - March 15") +
   theme_tufte() +
   theme(axis.text = element_blank(),
-        legend.position = "bottom") + 
-  facet_wrap(~week)
+        legend.position = "bottom",
+        plot.margin = margin(0, 0, 0, 0, "cm"))
 
 week12.plot <- covid19_spain %>%
   filter(CCAA != "Canarias") %>%
@@ -208,10 +210,11 @@ week12.plot <- covid19_spain %>%
   scale_fill_distiller(name = "Mean Weekly Incidence", 
                        palette = "Reds",
                        direction = 1) +
+  ggtitle("March 16 - March 22") +
   theme_tufte() +
   theme(axis.text = element_blank(),
-        legend.position = "bottom") + 
-  facet_wrap(~week)
+        legend.position = "bottom",
+        plot.margin = margin(0, 0, 0, 0, "cm"))
 
 week13.plot <- covid19_spain %>%
   filter(CCAA != "Canarias") %>%
@@ -223,10 +226,11 @@ week13.plot <- covid19_spain %>%
   scale_fill_distiller(name = "Mean Weekly Incidence", 
                        palette = "Reds", 
                        direction = 1) +
+  ggtitle("March 23 - March 29") +
   theme_tufte() +
   theme(axis.text = element_blank(),
-        legend.position = "bottom") + 
-  facet_wrap(~week)
+        legend.position = "bottom",
+        plot.margin = margin(0, 0, 0, 0, "cm"))
 
 week14.plot <- covid19_spain %>%
   filter(CCAA != "Canarias") %>%
@@ -238,12 +242,29 @@ week14.plot <- covid19_spain %>%
   scale_fill_distiller(name = "Mean Weekly Incidence", 
                        palette = "Reds", 
                        direction = 1) +
+  ggtitle("March 30 - April 5") +
   theme_tufte() +
   theme(axis.text = element_blank(),
-        legend.position = "bottom") + 
-  facet_wrap(~week)
+        legend.position = "bottom",
+        plot.margin = margin(0, 0, 0, 0, "cm"))
 
-grid.arrange(week11.plot, week12.plot, week13.plot, week14.plot, nrow = 2)
+week15.plot <- covid19_spain %>%
+  filter(CCAA != "Canarias") %>%
+  group_by(province, week = isoweek(Date)) %>% 
+  summarise(mean_weekly_incidence = mean(Incidence)) %>%
+  filter(week == 15) %>%
+  ggplot() +
+  geom_sf(aes(fill = mean_weekly_incidence)) +
+  scale_fill_distiller(name = "Mean Weekly Incidence", 
+                       palette = "Reds", 
+                       direction = 1) +
+  ggtitle("April 6 - April 11") +
+  theme_tufte() +
+  theme(axis.text = element_blank(),
+        legend.position = "bottom",
+        plot.margin = margin(0, 0, 0, 0, "cm"))
+
+grid.arrange(week11.plot, week12.plot, week13.plot, week14.plot, week15.plot, nrow = 3)
 ```
 
 ```{r descriptives-temperature, echo = FALSE, fig.cap="\\label{fig:descriptives-temperature} Distribution of temperatures in the Autonomous Communities in Spain between March 12, 2020 and April 11, 2020. The Autonomous Communities have been sorted by latitude, with communities to the left being the northermost, and to the right the southernmost"}

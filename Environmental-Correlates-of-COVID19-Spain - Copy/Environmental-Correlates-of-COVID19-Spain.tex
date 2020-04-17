@@ -179,29 +179,57 @@ be the case with the novel SARS-CoV2. If such is the case, there is the
 possibility of easing restrictions to social contact as the weather
 warms; however, weeks or possibly months of costly measures could become
 undone if not, and the restrictions are lifted prematurely. Not
-surprisingly, this issue has triggered a lively debate.
+surprisingly, given the stakes involved, this issue has already
+triggered a lively debate.
 
-In this paper, we report results from a spatial analysis of incidence of
-COVID-19 in fifty provinces in Spain. Spain is one of the countries
-hardest hit by the virus, and enacted lockdown measures on March 16,
-2020, in response to a rapidly growing outbreak of COVID-19. We combine
-data on reported cases of the disease with metereological information,
-to create a spatio-temporal dataset covering a period of 30 days. We
-then join this dataset with provincial-level economic and demographic
-information to act as controls to our key environmental variables. These
-data are analyzed using a spatial SUR approach, which allows us to
-account for residual spatial autocorrelation.
+Some of what is thought about the possible seasonality of COVID-19 is
+based on analogies to the patterns of other known respiratory viruses.
+However, de Ángel Solá et al.~(2020) note that ``not all seasonal
+respiratory viruses experience the same spatiotemporal patterns''
+(section 4). This urges caution when extrapolating from known viruses,
+and indeed, the evidence in this respect is inconclusive. At a global
+scale, whereas de Ángel Solá et al.~(2020) see less risk in the Caribean
+Basin, Coelho et al.~(Coelho et al., 2020) warn that at least during the
+exponential phase, expansion of the virus is not driven by climate.
+Similarly, whereas Araujo and Naimi (2020) argue that spread of
+SARS-CoV2 will likely be constrained by climate, Harbert et al.~(2020)
+remain unconvinced that spatial modelling can currently discriminate the
+distribution of the disease on the basis of climate, at least in the
+United States. To further complicate matters, much of the relevant work
+has yet to be peer-reviewed and therefore is open to change (see for
+example the challenge of Harbert et al. (2020) to Araujo and Naimi
+(2020)). In the United States, the National Academy of Sciences,
+Engineering, and Medicine was engaged by the Office of the Executive for
+guidance on this matter (see National Academies of Sciences, Engineering
+and Medicine, 2020). Their conclusion summarizes the situation well (see
+p.~6): ``Some limited data support a potential waning of cases in warmer
+and more humid seasons, yet none are without major
+limitations\ldots Additional studies as the SARS-CoV-2 pandemic unfolds
+could shed more light on the effects of climate on transmission.''
 
-The results provide persuasive evidence of the effect of temperature on
-the incidence of COVID-19, as \textbf{NOTE ABOUT THE MAGNITUDE OF THE
-EFFECT}. The evidence concerning humidity is more mixed: while the
-direction of the effect is negative, as anticipated, the coefficients
-for this variable are only significant in some of equations in the
-system. Our control variables also provide some intriguing insights. The
-results of this analysis provide support to the hypothesis of
-seasonality of the novel SARS-CoV2, and should be of interest to public
-health officials and policy makers wrestling with the question of the
-trajectory of the pandemic.
+With the above considerations in mind, our objective with this paper is
+to contribute to the knowledge basis regarding the spread of COVID-19
+and the influence of environmental factors, particularly temperature and
+humidity. Hence, here we report results from a spatial analysis of
+incidence of COVID-19 in fifty provinces in Spain. Spain is one of the
+countries hardest hit by the virus, and enacted lockdown measures on
+March 16, 2020, in response to a rapidly growing outbreak of COVID-19.
+We combine data on reported cases of the disease with metereological
+information, to create a spatio-temporal dataset covering a period of 30
+days. We then join this dataset with provincial-level economic and
+demographic information to act as controls to our key environmental
+variables. These data are analyzed using a spatial SUR approach, which
+allows us to account for residual spatial autocorrelation. The results
+provide evidence of the effect of temperature on the incidence of
+COVID-19, as \textbf{NOTE ABOUT THE MAGNITUDE OF THE EFFECT}. The
+evidence concerning humidity is more mixed: while the direction of the
+effect is negative, as anticipated, the coefficients for this variable
+are only significant in some of equations in the system. Our control
+variables also provide some intriguing insights. The results of this
+analysis provide support to the hypothesis of seasonality of the novel
+SARS-CoV2, and should be of interest to public health officials and
+policy makers wrestling with the question of the trajectory of the
+pandemic.
 
 Please note that this paper is prepared as a reproducible research
 document. The source R Markdown document, as well as all data and code
@@ -258,14 +286,14 @@ Population Density & Population density in the province in people per sq.km & 8.
 
 \begin{figure}
 \centering
-\includegraphics{Climatic-Correlates-of-COVID19-Spain_files/figure-latex/weekly-average-incidence-map-1.pdf}
-\caption{\{fig:weekly-average-incidence-map\}Mean weekly incidence of
-COVID-19 by province, in reported cases by 100,000 people}
+\includegraphics{Environmental-Correlates-of-COVID19-Spain_files/figure-latex/weekly-average-incidence-map-1.pdf}
+\caption{\label{fig:weekly-average-incidence-map}Mean weekly incidence
+of COVID-19 by province, in reported cases by 100,000 people}
 \end{figure}
 
 \begin{figure}
 \centering
-\includegraphics{Climatic-Correlates-of-COVID19-Spain_files/figure-latex/descriptives-temperature-1.pdf}
+\includegraphics{Environmental-Correlates-of-COVID19-Spain_files/figure-latex/descriptives-temperature-1.pdf}
 \caption{\label{fig:descriptives-temperature} Distribution of
 temperatures in the Autonomous Communities in Spain between March 12,
 2020 and April 11, 2020. The Autonomous Communities have been sorted by
@@ -275,7 +303,7 @@ right the southernmost}
 
 \begin{figure}
 \centering
-\includegraphics{Climatic-Correlates-of-COVID19-Spain_files/figure-latex/descriptives-humidity-1.pdf}
+\includegraphics{Environmental-Correlates-of-COVID19-Spain_files/figure-latex/descriptives-humidity-1.pdf}
 \caption{\label{fig:descriptives-humidity} Distribution of humidity in
 the Autonomous Communities in Spain between March 12, 2020 and April 11,
 2020. The Autonomous Communities have been sorted by latitude, with
@@ -392,7 +420,7 @@ correlated with incidence of COVID-19.
 
 \begin{figure}
 \centering
-\includegraphics{Climatic-Correlates-of-COVID19-Spain_files/figure-latex/daily-correlations-1.pdf}
+\includegraphics{Environmental-Correlates-of-COVID19-Spain_files/figure-latex/daily-correlations-1.pdf}
 \caption{\label{fig:daily-correlations}Distribution of daily
 correlations of the independent variables with daily incidence of
 COVID-19 (all variables have been log-transformed)}
@@ -406,7 +434,7 @@ The goodness of fit of the three systems of equations is shown in Figure
 
 \begin{figure}
 \centering
-\includegraphics{Climatic-Correlates-of-COVID19-Spain_files/figure-latex/goodness-of-fit-1.pdf}
+\includegraphics{Environmental-Correlates-of-COVID19-Spain_files/figure-latex/goodness-of-fit-1.pdf}
 \caption{\label{fig:goodness-of-fit} Goodness of fit of the SUR systems:
 by date and pooled}
 \end{figure}
@@ -456,6 +484,10 @@ Kaplan, D.M., 2020. Rticles: Article formats for r markdown.
 Angulo, A., Lopez, F.A., Minguez, R., Mur, J., 2020. Spsur: Spatial
 seemingly unrelated regression models.
 
+\leavevmode\hypertarget{ref-Araujo2020spread}{}%
+Araujo, M.B., Naimi, B., 2020. Spread of sars-cov-2 coronavirus likely
+to be constrained by climate. medRxiv.
+
 \leavevmode\hypertarget{ref-Arnold2019}{}%
 Arnold, J.B., 2019. Ggthemes: Extra themes, scales and geoms for
 'ggplot2'.
@@ -463,6 +495,12 @@ Arnold, J.B., 2019. Ggthemes: Extra themes, scales and geoms for
 \leavevmode\hypertarget{ref-Auguie2017gridextra}{}%
 Auguie, B., 2017. GridExtra: Miscellaneous functions for "grid"
 graphics.
+
+\leavevmode\hypertarget{ref-deangel2020weathering}{}%
+Ángel Solá, D.E. de, Wang, L., Vázquez, M., Lázaro, P.A.M., 2020.
+Weathering the pandemic: How the caribbean basin can use viral and
+environmental patterns to predict, prepare and respond to covid‐19.
+Journal of Medical Virology.
 
 \leavevmode\hypertarget{ref-Bivand2013}{}%
 Bivand, R.S., Pebesma, E., Gomez-Rubio, V., 2013. Applied spatial data
@@ -478,6 +516,12 @@ Chan, K., Peiris, J., Lam, S., Poon, L., Yuen, K., Seto, W., 2011. The
 effects of temperature and relative humidity on the viability of the
 sars coronavirus. Advances in virology 2011.
 
+\leavevmode\hypertarget{ref-Coelho2020exponential}{}%
+Coelho, M.T.P., Rodrigues, J.F.M., Medina, A.M., Scalco, P., Terribile,
+L.C., Vilela, B., Diniz-Filho, J.A.F., Dobrovolski, R., 2020.
+Exponential phase of covid19 expansion is not driven by climate at
+global scale. medRxiv.
+
 \leavevmode\hypertarget{ref-Fernandes2020economic}{}%
 Fernandes, N., 2020. Economic effects of coronavirus outbreak (covid-19)
 on the world economy. Available at SSRN 3557504.
@@ -490,6 +534,11 @@ Journal of Chinese Governance 1--20.
 \leavevmode\hypertarget{ref-Grolemund2011dates}{}%
 Grolemund, G., Wickham, H., 2011. Dates and times made easy with
 lubridate. Journal of Statistical Software 40, 1--25.
+
+\leavevmode\hypertarget{ref-Harbert2020spatial}{}%
+Harbert, R.S., Cunningham, S.W., Tessler, M., 2020. Spatial modeling
+cannot currently differentiate sars-cov-2 coronavirus and human
+distributions on the basis of climate in the united states. medRxiv.
 
 \leavevmode\hypertarget{ref-Jaakkola2014decline}{}%
 Jaakkola, K., Saukkoriipi, A., Jokelainen, J., Juvonen, R., Kauppila,
@@ -529,6 +578,13 @@ occurrence of respiratory tract infections. Respiratory medicine 103,
 Millo, G., 2017. Robust standard error estimators for panel models: A
 unifying approach. Journal of Statistical Software 82, 1--27.
 doi:\href{https://doi.org/10.18637/jss.v082.i03}{10.18637/jss.v082.i03}
+
+\leavevmode\hypertarget{ref-National2020rapid}{}%
+National Academies of Sciences, Engineering and Medicine, 2020. Rapid
+expert consultation on sars-cov-2 survival in relation to temperature
+and humidity and potential for seasonality for the covid-19 pandemic
+(april 7, 2020). The National Academies Press, Washington, DC.
+doi:\href{https://doi.org/doi:10.17226/25771}{doi:10.17226/25771}
 
 \leavevmode\hypertarget{ref-Pebesma2018}{}%
 Pebesma, E., 2018. Simple Features for R: Standardized Support for
